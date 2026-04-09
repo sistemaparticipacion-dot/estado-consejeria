@@ -1,0 +1,103 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 50px;
+    background-color: #6f4c9c; /* Color institucional de fondo */
+}
+
+h1 {
+    color: #ffb71b; /* Color institucional para el título */
+}
+
+p, li {
+    color: white; /* Texto descriptivo en blanco */
+}
+
+ul {
+    list-style: none; /* Quita los puntos negros de la lista */
+    padding-left: 0; /* Elimina la sangría */
+}
+
+input {
+    padding: 10px;
+    width: 200px;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px 20px;
+    margin-left: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#resultado {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white; /* Texto en blanco */
+}
+
+/* Botón de regreso */
+.btn-regreso {
+    display: inline-block;
+    background-color: #ffb71b;
+    color: #6f4c9c;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    margin-top: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-regreso:hover {
+    background-color: #ffd454;
+}
+
+/* Estilo para la tarjeta */
+.tarjeta {
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 12px;
+    display: inline-block;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    max-width: 600px;
+    margin: 20px auto 0;
+}
+
+/* Ícono grande (emoji) para resultados */
+#resultado .icono {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* Adaptación para la imagen en móviles */
+img.logo-sistema {
+    max-width: 100%; /* Se adapta al tamaño del contenedor */
+    height: auto;    /* Mantiene la proporción */
+}
+
+/* Adaptaciones para móviles */
+@media (max-width: 768px) {
+    body {
+        margin-top: 20px; /* Menos espacio en pantallas pequeñas */
+    }
+    
+    input {
+        width: 90%; /* Hace que el campo de entrada sea más grande en móviles */
+    }
+
+    button {
+        width: 90%; /* El botón también se adapta al ancho de la pantalla */
+        margin-top: 10px;
+    }
+
+    #resultado {
+        font-size: 16px; /* Ajusta el tamaño de la fuente para pantallas pequeñas */
+    }
+}

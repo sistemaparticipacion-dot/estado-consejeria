@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Consulta SDACP</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Imagen del sistema -->
+  <div class="container">
+    <img src="sistema.png" alt="Logo SDACP" class="logo-sistema" />
+
+    <!-- Título y descripción -->
+    <h1>Consulta el estado de tu consejería</h1>
+    <p>En este espacio podrás consultar el estado de tu consejería en el Sistema Distrital de Arte, Cultura y Patrimonio (SDACP). Recuerda que contar con una consejería activa te permite acceder a diferentes incentivos como:</p>
+
+    <ul>
+      <li>i) Invitaciones culturales.</li>
+      <li>ii) Becas exclusivas para consejeros del SDACP.</li>
+      <li>iii) Apoyo a la movilidad de Transmilenio.</li>
+      <li>iv) Puntos adicionales en diferentes convocatorias de estímulos del sector cultural.</li>
+    </ul>
+
+    <p>Para hacer la consulta, únicamente debes ingresar tu número de documento y el sistema te mostrará si actualmente tienes consejería activa o inactiva, de acuerdo con lo establecido en el artículo 62B del Decreto 480 de 2018.</p>
+
+    <!-- Campo de entrada y botón -->
+    <input type="text" id="documento" placeholder="Número de documento" />
+    <button onclick="consultar()">Consultar</button>
+
+    <!-- Resultado -->
+    <div id="resultado" class="tarjeta"></div>
+
+    <!-- Botón para generar certificado (oculto por defecto) -->
+    <button id="btnCertificado" style="display:none;" onclick="generarCertificado()">Generar certificado</button>
+
+  <!-- Librería jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+</body>
+</html>
