@@ -80,7 +80,7 @@ function generarCertificado() {
   let yTitulo = encabezadoAlto + (10 * 5); // cada "enter" ~5 mm
 
   doc.text(
-    "LA SUSCRITA DIRECTORA DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE",
+    "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE",
     105,
     yTitulo,
     { align: "center" }
