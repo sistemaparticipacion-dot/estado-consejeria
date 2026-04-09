@@ -1,101 +1,58 @@
-let consejeroEncontrado = null;
+let datosConsejero = null;
 
 async function consultar() {
-    const docInput = document.getElementById("documento").value.trim();
-    const resDiv = document.getElementById("resultado");
+    const input = document.getElementById("documento").value.trim();
+    const resBox = document.getElementById("resBox");
     const btnPdf = document.getElementById("btnCertificado");
 
-    // Limpiar pantalla
-    resDiv.className = "res-box";
-    resDiv.innerHTML = "";
+    // Limpiar siempre al inicio
+    resBox.style.display = "none";
     btnPdf.style.display = "none";
-    consejeroEncontrado = null;
 
-    if (!docInput) {
-        resDiv.classList.add("res-inactivo");
-        resDiv.innerHTML = "Por favor, escribe un número de documento.";
-        return;
-    }
+    if (!input) return;
 
     try {
-        const response = await fetch("consejeros.json");
-        const data = await response.json();
+        const resp = await fetch("consejeros.json");
+        const data = await resp.json();
 
-        // Buscar por documento (No. Documento)
-        const consejero = data.find(p => String(p["No. Documento"]) === docInput);
+        // Buscar el consejero
+        const encontrado = data.find(c => String(c["No. Documento"]) === input);
 
-        if (consejero) {
-            consejeroEncontrado = consejero;
-            // Detectar nombre sin importar si es "Nombre" o "Nombre completo"
-            const nombre = consejero["Nombre completo"] || consejero["Nombre"] || "Consejero/a";
-            // Detectar estado
-            const estado = (consejero["Estado"] || "Activo").toLowerCase();
-
-            if (estado === "activo") {
-                resDiv.classList.add("res-activo");
-                resDiv.innerHTML = `✅ <strong>${nombre}</strong>: Su estado es ACTIVO. Ya puede descargar su certificado.`;
-                btnPdf.style.display = "block";
-                reproducirSonido("activo");
-            } else {
-                resDiv.classList.add("res-inactivo");
-                resDiv.innerHTML = `⚠️ <strong>${nombre}</strong>: Su estado es INACTIVO actualmente.`;
-                reproducirSonido("inactivo");
-            }
+        if (encontrado) {
+            datosConsejero = encontrado;
+            resBox.className = "resultado activo";
+            resBox.innerHTML = `✅ <strong>${encontrado["Nombre completo"] || encontrado["Nombre"]}</strong><br>Estado: ACTIVO`;
+            resBox.style.display = "block";
+            btnPdf.style.display = "block";
+            reproducirSonido("activo");
         } else {
-            resDiv.classList.add("res-error");
-            resDiv.innerHTML = "❌ No se encontró ningún registro con ese número.";
+            resBox.className = "resultado error";
+            resBox.innerHTML = "❌ No se encontró el documento en la base de datos.";
+            resBox.style.display = "block";
             reproducirSonido("error");
         }
     } catch (e) {
-        resDiv.classList.add("res-error");
-        resDiv.innerHTML = "Error al conectar con la base de datos.";
         console.error(e);
+        alert("Error cargando la base de datos. Verifica que consejeros.json esté en la carpeta.");
     }
 }
 
 function reproducirSonido(tipo) {
     const audio = new Audio(`sonido_${tipo}.mp3`);
-    audio.play().catch(() => console.log("Audio bloqueado por el navegador"));
+    audio.play().catch(() => {});
 }
 
-async function generarCertificado() {
-    if (!consejeroEncontrado) return;
-
+function generarCertificado() {
+    if (!datosConsejero) return;
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    const nombre = consejeroEncontrado["Nombre completo"] || consejeroEncontrado["Nombre"];
-    const id = consejeroEncontrado["No. Documento"];
-    const consejo = consejeroEncontrado["Consejo"] || "N/A";
-    const sector = consejeroEncontrado["Sector"] || "N/A";
-
-    // Estilo PDF sencillo pero elegante
-    doc.setFontSize(22);
-    doc.setTextColor(0, 51, 102);
-    doc.text("CERTIFICADO DE CONSEJERÍA", 105, 40, { align: "center" });
+    doc.setFontSize(20);
+    doc.text("CERTIFICADO OFICIAL", 105, 40, { align: "center" });
+    doc.setFontSize(14);
+    doc.text(`Nombre: ${datosConsejero["Nombre completo"] || datosConsejero["Nombre"]}`, 20, 60);
+    doc.text(`Documento: ${datosConsejero["No. Documento"]}`, 20, 75);
+    doc.text(`Consejo: ${datosConsejero["Consejo"]}`, 20, 90);
     
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`La Secretaría de Cultura certifica que:`, 20, 60);
-    
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text(nombre.toUpperCase(), 105, 75, { align: "center" });
-    
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Identificado(a) con No: ${id}`, 105, 85, { align: "center" });
-    
-    doc.text(`Forma parte activa del:`, 20, 105);
-    doc.setFont("helvetica", "bold");
-    doc.text(consejo, 20, 115);
-    
-    doc.setFont("helvetica", "normal");
-    doc.text(`Sector representado: ${sector}`, 20, 125);
-    
-    doc.setFontSize(10);
-    const fecha = new Date().toLocaleDateString();
-    doc.text(`Fecha de expedición: ${fecha}`, 20, 150);
-
-    doc.save(`Certificado_${id}.pdf`);
+    doc.save(`Certificado_${datosConsejero["No. Documento"]}.pdf`);
 }
