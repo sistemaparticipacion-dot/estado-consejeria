@@ -8,22 +8,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
+        /* ESTILOS INTEGRADOS PARA QUE NO SE VEA EN BLANCO */
         :root {
             --primario: #003366;
             --acento: #f1c40f;
             --fondo: #f4f7f9;
             --blanco: #ffffff;
             --texto: #333;
-            --sombra: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--fondo);
-            color: var(--texto);
-            line-height: 1.6;
+            margin: 0;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -33,82 +30,126 @@
             background-color: var(--primario);
             padding: 20px;
             text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
         header img {
-            max-width: 280px;
+            max-width: 100%;
             height: auto;
+            width: 300px; /* Tamaño controlado para que no se vea gigante */
         }
 
-        .main-container {
-            width: 95%;
-            max-width: 1100px;
-            margin: 30px auto;
+        .contenedor {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 25px;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
             flex: 1;
         }
 
-        @media (min-width: 850px) {
-            .main-container { grid-template-columns: 1.5fr 1fr; }
+        @media (min-width: 768px) {
+            .contenedor { grid-template-columns: 1.5fr 1fr; }
         }
 
-        .card {
+        .tarjeta {
             background: var(--blanco);
             padding: 30px;
             border-radius: 12px;
-            box-shadow: var(--sombra);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-
-        h1 { color: var(--primario); margin-bottom: 15px; font-size: 1.6rem; }
-        h2 { color: var(--primario); margin: 20px 0 10px; font-size: 1.2rem; }
 
         .img-sistema {
             width: 100%;
             max-width: 400px;
-            display: block;
             margin: 20px auto;
+            display: block;
             border-radius: 8px;
         }
 
-        ul { margin-left: 20px; margin-bottom: 15px; }
-        li { margin-bottom: 8px; }
-
-        /* Formulario de consulta */
-        .search-box {
-            position: sticky;
-            top: 20px;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--primario); }
-
-        input[type="text"], input[type="number"] {
+        input {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
+            margin: 15px 0;
             border: 2px solid #ddd;
             border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
+            font-size: 16px;
         }
-
-        input:focus { outline: none; border-color: var(--primario); }
 
         .btn {
             width: 100%;
-            padding: 14px;
+            padding: 15px;
             border: none;
             border-radius: 8px;
-            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 10px;
+            font-size: 16px;
+            transition: 0.3s;
         }
 
-        .btn-search { background-color: var(--acento); color
+        .btn-consultar { background-color: var(--acento); color: #000; }
+        .btn-pdf { background-color: var(--primario); color: #fff; margin-top: 15px; display: none; }
+
+        .resultado {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            border-left: 5px solid;
+        }
+
+        .activo { background: #d4edda; color: #155724; border-color: #28a745; }
+        .error { background: #f8d7da; color: #721c24; border-color: #dc3545; }
+
+        footer {
+            background: #eee;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        footer img { max-height: 50px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img src="encabezado.png" alt="SCRD">
+    </header>
+
+    <div class="contenedor">
+        <div class="tarjeta">
+            <h1 style="color: var(--primario);">Consulta tu Consejería</h1>
+            <p>Verifica el estado de tu participación en el Sistema Distrital de Arte, Cultura y Patrimonio.</p>
+            <img src="sistema.png" alt="Esquema" class="img-sistema">
+            <ul>
+                <li>Acceso a beneficios culturales.</li>
+                <li>Participación activa en el sector.</li>
+                <li>Certificación oficial inmediata.</li>
+            </ul>
+        </div>
+
+        <div class="tarjeta" style="align-self: start;">
+            <label style="font-weight: bold;">Número de Documento:</label>
+            <input type="number" id="documento" placeholder="Ej: 12345678">
+            <button class="btn btn-consultar" onclick="consultar()">CONSULTAR ESTADO</button>
+            
+            <div id="resBox" class="resultado"></div>
+            
+            <button id="btnCertificado" class="btn btn-pdf" onclick="generarCertificado()">
+                DESCARGAR CERTIFICADO PDF
+            </button>
+        </div>
+    </div>
+
+    <footer>
+        <img src="piedepagina1.png">
+        <img src="piedepagina2.png">
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
