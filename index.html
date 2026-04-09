@@ -1,43 +1,114 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Consulta SDACP</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <!-- Imagen del sistema -->
-  <div class="container">
-    <img src="sistema.png" alt="Logo SDACP" class="logo-sistema" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Consejería - SDACP</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <!-- Título y descripción -->
-    <h1>Consulta el estado de tu consejería</h1>
-    <p>En este espacio podrás consultar el estado de tu consejería en el Sistema Distrital de Arte, Cultura y Patrimonio (SDACP). Recuerda que contar con una consejería activa te permite acceder a diferentes incentivos como:</p>
+    <style>
+        :root {
+            --primario: #003366;
+            --acento: #f1c40f;
+            --fondo: #f4f7f9;
+            --blanco: #ffffff;
+            --texto: #333;
+            --sombra: 0 4px 12px rgba(0,0,0,0.1);
+        }
 
-    <ul>
-      <li>i) Invitaciones culturales.</li>
-      <li>ii) Becas exclusivas para consejeros del SDACP.</li>
-      <li>iii) Apoyo a la movilidad de Transmilenio.</li>
-      <li>iv) Puntos adicionales en diferentes convocatorias de estímulos del sector cultural.</li>
-    </ul>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    <p>Para hacer la consulta, únicamente debes ingresar tu número de documento y el sistema te mostrará si actualmente tienes consejería activa o inactiva, de acuerdo con lo establecido en el artículo 62B del Decreto 480 de 2018.</p>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--fondo);
+            color: var(--texto);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-    <!-- Campo de entrada y botón -->
-    <input type="text" id="documento" placeholder="Número de documento" />
-    <button onclick="consultar()">Consultar</button>
+        header {
+            background-color: var(--primario);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
 
-    <!-- Resultado -->
-    <div id="resultado" class="tarjeta"></div>
+        header img {
+            max-width: 280px;
+            height: auto;
+        }
 
-    <!-- Botón para generar certificado (oculto por defecto) -->
-    <button id="btnCertificado" style="display:none;" onclick="generarCertificado()">Generar certificado</button>
+        .main-container {
+            width: 95%;
+            max-width: 1100px;
+            margin: 30px auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            flex: 1;
+        }
 
-  <!-- Librería jsPDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        @media (min-width: 850px) {
+            .main-container { grid-template-columns: 1.5fr 1fr; }
+        }
 
-  <!-- Scripts -->
-  <script src="script.js"></script>
-</body>
-</html>
+        .card {
+            background: var(--blanco);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--sombra);
+        }
+
+        h1 { color: var(--primario); margin-bottom: 15px; font-size: 1.6rem; }
+        h2 { color: var(--primario); margin: 20px 0 10px; font-size: 1.2rem; }
+
+        .img-sistema {
+            width: 100%;
+            max-width: 400px;
+            display: block;
+            margin: 20px auto;
+            border-radius: 8px;
+        }
+
+        ul { margin-left: 20px; margin-bottom: 15px; }
+        li { margin-bottom: 8px; }
+
+        /* Formulario de consulta */
+        .search-box {
+            position: sticky;
+            top: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--primario); }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus { outline: none; border-color: var(--primario); }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn-search { background-color: var(--acento); color
