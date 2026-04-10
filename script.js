@@ -3,12 +3,14 @@ const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3JA8Vgk
 let datosConsejeros = [];
 let consejeroEncontrado = null;
 
-// Función para arreglar caracteres extraños (tildes y eñes)
-function limpiarTexto(texto) {
-    if (!texto) return "";
-    return texto
-        .replace(//g, 'n') // Intento de corregir eñes si vienen rotas
-        .trim();
+// Función avanzada para separar CSV respetando comas dentro de comillas
+function parseCSV(text) {
+    const rows = text.split(/\r?\n/);
+    return rows.map(row => {
+        const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+        if (!matches) return [];
+        return matches.map(val => val.replace(/^"|"$/g, "").trim());
+    });
 }
 
 async function cargarDatos() {
@@ -16,14 +18,15 @@ async function cargarDatos() {
         const respuesta = await fetch(SHEET_CSV_URL);
         const textoOriginal = await respuesta.text();
         
-        const filas = textoOriginal.split('\n').map(fila => fila.split(','));
-        const cabeceras = filas[0].map(h => h.trim());
+        const filas = parseCSV(textoOriginal);
+        if (filas.length === 0) return;
+
+        const cabeceras = filas[0];
 
         datosConsejeros = filas.slice(1).map(fila => {
             let obj = {};
             cabeceras.forEach((cabecera, i) => {
-                // Limpiamos cada celda al cargarla
-                obj[cabecera] = fila[i] ? fila[i].trim() : "";
+                obj[cabecera] = fila[i] || "";
             });
             return obj;
         });
@@ -40,15 +43,18 @@ async function consultar() {
     const resBox = document.getElementById("resBox");
     const btnPdf = document.getElementById("btnCertificado");
 
-    if (!documentoInput) return;
+    if (!documentoInput) {
+        alert("Por favor ingrese un número de documento.");
+        return;
+    }
 
-    // Buscar el documento
+    // Buscamos el documento exactamente
     consejeroEncontrado = datosConsejeros.find(c => String(c["No. Documento"]) === documentoInput);
 
     if (consejeroEncontrado) {
         resBox.style.display = "block";
         const nombre = consejeroEncontrado["Nombre completo"] || consejeroEncontrado["Nombre"];
-        const estado = (consejeroEncontrado["Estado"] || "Inactivo").toLowerCase();
+        const estado = (consejeroEncontrado["Estado"] || "").toLowerCase();
 
         if (estado.includes("activo")) {
             resBox.className = "resultado activo";
@@ -61,7 +67,7 @@ async function consultar() {
         }
     } else {
         resBox.className = "resultado error";
-        resBox.innerHTML = "❌ Documento no encontrado.";
+        resBox.innerHTML = "❌ Documento no encontrado en la base de datos oficial.";
         resBox.style.display = "block";
         btnPdf.style.display = "none";
     }
