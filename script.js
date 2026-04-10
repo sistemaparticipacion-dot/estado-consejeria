@@ -3,22 +3,20 @@ const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3JA8Vgk
 let datosConsejeros = [];
 let consejeroEncontrado = null;
 
-// Función para cargar y limpiar los datos de Google Sheets
 async function cargarDatos() {
     try {
-        const respuesta = await fetch(SHEET_CSV_URL + '&cache=none' + Date.now());
+        // Añadimos un timestamp para evitar que el navegador guarde una versión vieja
+        const respuesta = await fetch(SHEET_CSV_URL + '&t=' + Date.now());
         const textoOriginal = await respuesta.text();
         
-        // Dividir por filas
-        const filas = textoOriginal.split(/\r?\n/);
+        // Dividir por filas y limpiar espacios raros
+        const filas = textoOriginal.split(/\r?\n/).filter(f => f.trim() !== "");
         if (filas.length < 2) return;
 
-        // Limpiar encabezados
         const cabeceras = filas[0].split(',').map(h => h.replace(/"/g, '').trim());
 
-        // Procesar cada fila de forma segura
         datosConsejeros = filas.slice(1).map(fila => {
-            // Esta expresión regular separa por comas pero respeta las comas dentro de comillas
+            // Regex para separar por comas pero ignorar comas dentro de comillas
             const valores = fila.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
             let obj = {};
             cabeceras.forEach((header, i) => {
@@ -27,13 +25,12 @@ async function cargarDatos() {
             });
             return obj;
         });
-        console.log("Base de datos sincronizada con Google Sheets.");
+        console.log("Base de datos cargada. Registros:", datosConsejeros.length);
     } catch (error) {
-        console.error("Error crítico de carga:", error);
+        console.error("Error al cargar datos:", error);
     }
 }
 
-// Cargar al abrir la web
 cargarDatos();
 
 async function consultar() {
@@ -41,7 +38,6 @@ async function consultar() {
     const resBox = document.getElementById("resBox");
     const btnPdf = document.getElementById("btnCertificado");
 
-    // Limpieza visual
     resBox.style.display = "none";
     btnPdf.style.display = "none";
 
@@ -50,21 +46,24 @@ async function consultar() {
         return;
     }
 
-    // BUSCADOR ROBUSTO: Busca en la columna "No. Documento"
+    // BÚSQUEDA TODOTERRENO: 
+    // Buscamos el documento comparando contra TODAS las propiedades de la fila
+    // por si Google Sheets cambió el nombre de la columna "No. Documento"
     consejeroEncontrado = datosConsejeros.find(c => {
-        const docEnTabla = String(c["No. Documento"] || "").replace(/\D/g, ""); // Solo números
-        const docBuscado = inputDoc.replace(/\D/g, "");
-        return docEnTabla === docBuscado;
+        return Object.values(c).some(valor => String(valor).trim() === inputDoc);
     });
 
     if (consejeroEncontrado) {
         resBox.style.display = "block";
-        const nombre = consejeroEncontrado["Nombre completo"] || "Consejero/a";
+        
+        // Buscamos el nombre y estado de forma flexible
+        const nombre = consejeroEncontrado["Nombre completo"] || consejeroEncontrado["Nombre"] || "Consejero/a";
+        const consejo = consejeroEncontrado["Consejo"] || "Consejo Distrital";
         const estado = (consejeroEncontrado["Estado"] || "").toLowerCase();
 
         if (estado.includes("activo")) {
             resBox.className = "resultado activo";
-            resBox.innerHTML = `✅ <strong>${nombre}</strong><br>Estado: <strong>ACTIVO</strong><br><small>${consejeroEncontrado["Consejo"] || ""}</small>`;
+            resBox.innerHTML = `✅ <strong>${nombre}</strong><br>Estado: <strong>ACTIVO</strong><br><small>${consejo}</small>`;
             btnPdf.style.display = "block";
             reproducirSonido("activo");
         } else {
@@ -74,14 +73,15 @@ async function consultar() {
         }
     } else {
         resBox.className = "resultado error";
-        resBox.innerHTML = "❌ El documento no se encuentra en la base de datos.<br><small>Verifica el número o contacta a la Secretaría.</small>";
+        resBox.innerHTML = "❌ Documento no encontrado en la base de datos oficial.";
         resBox.style.display = "block";
         reproducirSonido("error");
     }
 }
 
 function reproducirSonido(tipo) {
-    new Audio(`sonido_${tipo}.mp3`).play().catch(() => {});
+    const audio = new Audio(`sonido_${tipo}.mp3`);
+    audio.play().catch(() => {});
 }
 
 function generarCertificado() {
@@ -89,13 +89,16 @@ function generarCertificado() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
+    const nombre = consejeroEncontrado["Nombre completo"] || consejeroEncontrado["Nombre"] || "Consejero/a";
+    const documento = consejeroEncontrado["No. Documento"] || document.getElementById("documento").value;
+
     doc.setFont("helvetica", "bold");
     doc.text("CERTIFICADO DE CONSEJERÍA", 105, 40, { align: "center" });
     doc.setFont("helvetica", "normal");
-    doc.text(`Nombre: ${consejeroEncontrado["Nombre completo"]}`, 20, 60);
-    doc.text(`Cédula: ${consejeroEncontrado["No. Documento"]}`, 20, 70);
-    doc.text(`Consejo: ${consejeroEncontrado["Consejo"]}`, 20, 80);
-    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 100);
+    doc.text(`Nombre: ${nombre}`, 20, 60);
+    doc.text(`Documento: ${documento}`, 20, 70);
+    doc.text(`Consejo: ${consejeroEncontrado["Consejo"] || "N/A"}`, 20, 80);
+    doc.text(`Expedido el: ${new Date().toLocaleDateString()}`, 20, 100);
     
-    doc.save(`Certificado_${consejeroEncontrado["No. Documento"]}.pdf`);
+    doc.save(`Certificado_${documento}.pdf`);
 }
