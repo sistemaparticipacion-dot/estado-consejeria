@@ -137,32 +137,38 @@ function generarCertificado() {
     const doc = new jsPDF();
     
     const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 25;
     
-    // --- INSERTAR IMÁGENES ---
-    
-    // 1. ENCABEZADO (Logo SCRD y Bogotá)
+    // --- 1. IMÁGENES (ENCABEZADO Y PIES) ---
     if (institutionalImages.header) {
-        // (Imagen, x, y, width, height)
-        doc.addImage(institutionalImages.header, 'PNG', 25, 15, 160, 25);
+        // x: 0, y: 0 para que cubra el tope si es necesario, o 15 para margen
+        doc.addImage(institutionalImages.header, 'PNG', 0, 0, pageWidth, 45); 
     }
     
-    // --- TEXTO OFICIAL (Réplica del ejemplo) ---
+    if (institutionalImages.footer1) {
+        doc.addImage(institutionalImages.footer1, 'PNG', 20, 260, 60, 20);
+    }
     
-    // 2. TÍTULO CARGO
+    if (institutionalImages.footer2) {
+        doc.addImage(institutionalImages.footer2, 'PNG', 130, 260, 60, 20);
+    }
+
+    // --- 2. CUERPO DEL TEXTO ---
+    doc.setTextColor(0, 0, 0); // Texto negro puro
+
+    // Título del Director
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10.5);
-    const cargoSuperior = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
-    const lineasCargo = doc.splitTextToSize(cargoSuperior, pageWidth - 50);
-    doc.text(lineasCargo, 25, 55);
+    doc.setFontSize(10);
+    const cargo = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
+    const lineasCargo = doc.splitTextToSize(cargo, 160);
+    doc.text(lineasCargo, 25, 60);
 
-    // 3. HACE CONSTAR QUE
+    // Hace constar
     doc.setFontSize(11);
-    doc.text("HACE CONSTAR QUE:", pageWidth / 2, 75, { align: "center" });
+    doc.text("HACE CONSTAR QUE:", pageWidth / 2, 85, { align: "center" });
 
-    // 4. CUERPO DEL TEXTO (Dinámico)
+    // Párrafo principal
     doc.setFont("helvetica", "normal");
-    const nombre = (consejeroEncontrado["Nombre completo"] || "Consejero").toUpperCase();
+    const nombre = (consejeroEncontrado["Nombre completo"] || "CONSEJERO").toUpperCase();
     const cedula = consejeroEncontrado["No. Documento"];
     const consejo = consejeroEncontrado["Consejo"] || "N/A";
     const sector = consejeroEncontrado["Sector"] || "N/A";
@@ -170,41 +176,33 @@ function generarCertificado() {
 
     const parrafo1 = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.`;
     
-    const lineasP1 = doc.splitTextToSize(parrafo1, pageWidth - 50);
-    doc.text(lineasP1, 25, 90, { align: "justify" });
+    const lineasP1 = doc.splitTextToSize(parrafo1, 160);
+    doc.text(lineasP1, 25, 100, { align: "justify" });
 
+    // Párrafo de estado activo
     const parrafo2 = "A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 17 del Decreto Distrital 336 de 2022.";
-    const lineasP2 = doc.splitTextToSize(parrafo2, pageWidth - 50);
-    doc.text(lineasP2, 25, 120, { align: "justify" });
+    const lineasP2 = doc.splitTextToSize(parrafo2, 160);
+    doc.text(lineasP2, 25, 135, { align: "justify" });
 
-    // 5. FECHA EXPEDICIÓN
+    // Fecha
     const hoy = new Date();
     const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
     const fechaTexto = `La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
-    doc.text(doc.splitTextToSize(fechaTexto, pageWidth - 50), 25, 140);
+    doc.text(doc.splitTextToSize(fechaTexto, 160), 25, 160);
 
-    // 6. FIRMA
+    // Firma
     doc.setFont("helvetica", "bold");
-    doc.text("JULIÁN FELIPE DUARTE ÁLVAREZ", 25, 170);
-    doc.setFontSize(10);
+    doc.text("JULIÁN FELIPE DUARTE ÁLVAREZ", 25, 195);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text("Director de Asuntos Locales y Participación", 25, 176);
-    doc.text("Secretaría de Cultura, Recreación y Deporte", 25, 181);
+    doc.text("Director de Asuntos Locales y Participación", 25, 201);
+    doc.text("Secretaría de Cultura, Recreación y Deporte", 25, 206);
 
-    // --- INSERTAR PIES DE PÁGINA ---
-    
-    const footerY = 240; // Posición vertical de los logos de pie
-    
-    // 7. PIE DE PÁGINA 1 (Logo Radar Cultural / Participación)
-    if (institutionalImages.footer1) {
-        doc.addImage(institutionalImages.footer1, 'PNG', 25, footerY, 70, 20);
-    }
-    
-    // 8. PIE DE PÁGINA 2 (Logo Alcaldía Mayor de Bogotá)
-    if (institutionalImages.footer2) {
-        doc.addImage(institutionalImages.footer2, 'PNG', 120, footerY, 60, 20);
-    }
+    // Nota al pie
+    doc.setFontSize(7);
+    doc.setTextColor(120);
+    const nota = "Nota: Este certificado ha sido generado automáticamente desde el portal web Radar Cultural. Puede verificar la autenticidad del mismo a través del correo sistemaparticipacion@scrd.gov.co";
+    doc.text(doc.splitTextToSize(nota, 160), 25, 230);
 
-    // Guardar el archivo
     doc.save(`Certificado_Consejero_${cedula}.pdf`);
 }
