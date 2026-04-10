@@ -73,29 +73,90 @@ function generarCertificado() {
     const margin = 32;
     const textWidth = pageWidth - (margin * 2);
 
-    let y = 55; // 👈 control dinámico
+    let y = 55;
 
-    // Fondo
+    // ===============================
+    // FUNCIÓN JUSTIFICADO REAL
+    // ===============================
+    function justificarTexto(doc, texto, x, y, maxWidth, lineHeight) {
+        const palabras = texto.split(' ');
+        let linea = [];
+        let lineas = [];
+
+        palabras.forEach(palabra => {
+            const testLinea = [...linea, palabra].join(' ');
+            const width = doc.getTextWidth(testLinea);
+
+            if (width > maxWidth && linea.length > 0) {
+                lineas.push(linea);
+                linea = [palabra];
+            } else {
+                linea.push(palabra);
+            }
+        });
+
+        if (linea.length) lineas.push(linea);
+
+        lineas.forEach((lineaPalabras, index) => {
+            const isLastLine = index === lineas.length - 1;
+
+            if (isLastLine) {
+                doc.text(lineaPalabras.join(' '), x, y);
+            } else {
+                const textoLinea = lineaPalabras.join(' ');
+                const textWidth = doc.getTextWidth(textoLinea);
+                const espacioDisponible = maxWidth - textWidth;
+                const espacios = lineaPalabras.length - 1;
+
+                let offsetX = x;
+
+                lineaPalabras.forEach((palabra, i) => {
+                    doc.text(palabra, offsetX, y);
+
+                    if (i < espacios) {
+                        const extra = espacioDisponible / espacios;
+                        offsetX += doc.getTextWidth(palabra) + doc.getTextWidth(' ') + extra;
+                    }
+                });
+            }
+
+            y += lineHeight;
+        });
+
+        return y;
+    }
+
+    // ===============================
+    // FONDO
+    // ===============================
     doc.addImage(plantillaBase64, 'PNG', 0, 0, pageWidth, 279.4);
 
-    // 1. Cargo
+    // ===============================
+    // 1. ENCABEZADO
+    // ===============================
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
 
     const cargo = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
-    
+
     const cargoLines = doc.splitTextToSize(cargo, textWidth);
     doc.text(cargoLines, margin, y);
+
     y += cargoLines.length * 5;
 
-    // 2. HACE CONSTAR
+    // ===============================
+    // 2. TÍTULO
+    // ===============================
     y += 10;
+
     doc.setFontSize(11);
     doc.text("HACE CONSTAR QUE:", pageWidth / 2, y, { align: "center" });
 
     y += 15;
 
-    // 3. Párrafo principal
+    // ===============================
+    // 3. CUERPO JUSTIFICADO
+    // ===============================
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10.5);
 
@@ -108,31 +169,18 @@ function generarCertificado() {
 
     const parrafo1 = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.`;
 
-    const p1Lines = doc.splitTextToSize(parrafo1, textWidth);
+    y = justificarTexto(doc, parrafo1, margin, y, textWidth, 6);
 
-    doc.text(p1Lines, margin, y, {
-        maxWidth: textWidth,
-        lineHeightFactor: 1.5
-        // ❌ quitamos justify
-    });
-
-    y += p1Lines.length * 6;
-
-    // 4. Segundo párrafo
+    // Segundo párrafo
     y += 5;
 
     const parrafo2 = "A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 17 del Decreto Distrital 336 de 2022.";
 
-    const p2Lines = doc.splitTextToSize(parrafo2, textWidth);
+    y = justificarTexto(doc, parrafo2, margin, y, textWidth, 6);
 
-    doc.text(p2Lines, margin, y, {
-        maxWidth: textWidth,
-        lineHeightFactor: 1.5
-    });
-
-    y += p2Lines.length * 6;
-
-    // 5. Fecha
+    // ===============================
+    // 4. FECHA (también justificada)
+    // ===============================
     y += 10;
 
     const hoy = new Date();
@@ -140,13 +188,11 @@ function generarCertificado() {
 
     const fechaTexto = `La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
 
-    const fechaLines = doc.splitTextToSize(fechaTexto, textWidth);
+    y = justificarTexto(doc, fechaTexto, margin, y, textWidth, 6);
 
-    doc.text(fechaLines, margin, y);
-
-    y += fechaLines.length * 6;
-
-    // 6. Firma
+    // ===============================
+    // 5. FIRMA
+    // ===============================
     y += 25;
 
     doc.setFont("helvetica", "bold");
@@ -161,15 +207,19 @@ function generarCertificado() {
     y += 5;
     doc.text("Secretaría de Cultura, Recreación y Deporte", pageWidth / 2, y, { align: "center" });
 
-    // 7. Nota
+    // ===============================
+    // 6. NOTA AL PIE
+    // ===============================
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
 
     const nota = "Nota: Este certificado ha sido generado automáticamente desde el portal web Radar Cultural. Puede verificar la autenticidad del mismo a través del correo sistemaparticipacion@scrd.gov.co";
 
     const notaLines = doc.splitTextToSize(nota, textWidth);
-
     doc.text(notaLines, margin, 240);
 
+    // ===============================
+    // EXPORTAR
+    // ===============================
     doc.save(`Certificado_${cedula}.pdf`);
 }
