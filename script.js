@@ -174,7 +174,7 @@ function generarCertificado() {
     // Segundo párrafo
     y += 5;
 
-    const parrafo2 = "A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 17 del Decreto Distrital 336 de 2022.";
+    const parrafo2 = "A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.";
 
     y = justificarTexto(doc, parrafo2, margin, y, textWidth, 6);
 
