@@ -4,11 +4,11 @@ let datosConsejeros = [];
 let consejeroEncontrado = null;
 let plantillaBase64 = null;
 
+// Inicialización del sistema
 async function inicializar() {
     try {
         const respuesta = await fetch(SHEET_CSV_URL + '&t=' + Date.now());
         const textoOriginal = await respuesta.text();
-        
         const filas = textoOriginal.split(/\r?\n/).filter(f => f.trim() !== "");
         const cabeceras = filas[0].split(',').map(h => h.trim());
 
@@ -22,10 +22,8 @@ async function inicializar() {
         });
 
         plantillaBase64 = await getBase64ImageFromUrl('plantilla.png');
-        console.log("Sistema listo y plantilla cargada.");
-    } catch (error) {
-        console.error("Error iniciando:", error);
-    }
+        console.log("Sistema listo.");
+    } catch (error) { console.error("Error:", error); }
 }
 
 function getBase64ImageFromUrl(imageUrl) {
@@ -49,7 +47,6 @@ async function consultar() {
     const inputDoc = document.getElementById("documento").value.trim();
     const resBox = document.getElementById("resBox");
     const btnPdf = document.getElementById("btnCertificado");
-
     if (!inputDoc) return;
 
     consejeroEncontrado = datosConsejeros.find(c => String(c["No. Documento"]) === inputDoc);
@@ -57,8 +54,7 @@ async function consultar() {
     if (consejeroEncontrado) {
         resBox.style.display = "block";
         resBox.className = "resultado activo";
-        const nombre = (consejeroEncontrado["Nombre completo"] || "").toUpperCase();
-        resBox.innerHTML = `✅ <strong>${nombre}</strong><br>Estado: ACTIVO`;
+        resBox.innerHTML = `✅ <strong>${(consejeroEncontrado["Nombre completo"]).toUpperCase()}</strong><br>Estado: ACTIVO`;
         btnPdf.style.display = "block";
     } else {
         resBox.style.display = "block";
@@ -75,25 +71,25 @@ function generarCertificado() {
     const doc = new jsPDF('p', 'mm', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Márgenes idénticos a la referencia
-    const margin = 28; 
+    // MÁRGENES DE REFERENCIA (Idénticos al modelo)
+    const margin = 32; 
     const textWidth = pageWidth - (margin * 2);
 
-    // 1. Fondo
+    // 1. Fondo de plantilla
     doc.addImage(plantillaBase64, 'PNG', 0, 0, 210, 297);
 
-    // 2. Cargo Superior (Negrita y ajustado)
+    // 2. Cargo del Director
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10.5);
+    doc.setFontSize(10);
     const cargo = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
-    doc.text(doc.splitTextToSize(cargo, textWidth), margin, 60);
+    doc.text(doc.splitTextToSize(cargo, textWidth), margin, 65);
 
     // 3. Hace Constar
     doc.setFontSize(11);
-    doc.text("HACE CONSTAR QUE:", pageWidth / 2, 82, { align: "center" });
+    doc.text("HACE CONSTAR QUE:", pageWidth / 2, 85, { align: "center" });
 
-    // 4. Párrafo Principal (Justificado)
+    // 4. Cuerpo de la certificación
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     const nombre = (consejeroEncontrado["Nombre completo"]).toUpperCase();
@@ -105,34 +101,35 @@ function generarCertificado() {
     const parrafo1 = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.`;
     
     const lineasP1 = doc.splitTextToSize(parrafo1, textWidth);
-    doc.text(lineasP1, margin, 95, { align: "justify" });
+    doc.text(lineasP1, margin, 100, { align: "justify" });
 
-    // 5. Segundo Párrafo
     const parrafo2 = "A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 17 del Decreto Distrital 336 de 2022.";
     const lineasP2 = doc.splitTextToSize(parrafo2, textWidth);
-    doc.text(lineasP2, margin, 132, { align: "justify" });
+    doc.text(lineasP2, margin, 138, { align: "justify" });
 
-    // 6. Fecha
+    // 5. Fecha
     const hoy = new Date();
     const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
     const fechaTexto = `La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
-    doc.text(doc.splitTextToSize(fechaTexto, textWidth), margin, 158);
+    doc.text(doc.splitTextToSize(fechaTexto, textWidth), margin, 162);
 
-    // 7. Firma CENTRADA
+    // 6. FIRMA CENTRADA (Coordenadas exactas)
+    const yFirma = 195;
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("JULIÁN FELIPE DUARTE ÁLVAREZ", pageWidth / 2, 190, { align: "center" });
+    doc.setFontSize(10.5);
+    doc.text("JULIÁN FELIPE DUARTE ÁLVAREZ", pageWidth / 2, yFirma, { align: "center" });
+    
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text("Director de Asuntos Locales y Participación", pageWidth / 2, 196, { align: "center" });
-    doc.text("Secretaría de Cultura, Recreación y Deporte", pageWidth / 2, 201, { align: "center" });
+    doc.setFontSize(9.5);
+    doc.text("Director de Asuntos Locales y Participación", pageWidth / 2, yFirma + 6, { align: "center" });
+    doc.text("Secretaría de Cultura, Recreación y Deporte", pageWidth / 2, yFirma + 11, { align: "center" });
 
-    // 8. NOTA AL PIE (Gris y pequeña)
+    // 7. NOTA AL PIE (Gris y pequeña)
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
     const nota = "Nota: Este certificado ha sido generado automáticamente desde el portal web Radar Cultural. Puede verificar la autenticidad del mismo a través del correo sistemaparticipacion@scrd.gov.co";
     const lineasNota = doc.splitTextToSize(nota, textWidth);
-    doc.text(lineasNota, margin, 225, { align: "justify" });
+    doc.text(lineasNota, margin, 235, { align: "justify" });
 
     doc.save(`Certificado_${cedula}.pdf`);
 }
