@@ -88,27 +88,32 @@ function generarCertificado() {
     const doc = new jsPDF('p', 'mm', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Configuración de márgenes para que el texto no se corte (25mm a cada lado)
-    const margin = 25;
-    const textWidth = pageWidth - (margin * 2);
+    // REDUCIMOS EL ANCHO ÚTIL: Dejamos 30mm de margen a cada lado para evitar cortes
+    const margin = 30; 
+    const textWidth = pageWidth - (margin * 2); // Esto da aprox 150mm de ancho real
 
-    // Fondo: Plantilla institucional
+    // 1. Fondo de la Plantilla
     doc.addImage(plantillaBase64, 'PNG', 0, 0, 210, 297);
 
+    // 2. Configuración de Texto General
     doc.setTextColor(0, 0, 0);
     
-    // --- Texto 1: Cargo del Director ---
+    // --- Título del Director ---
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     const cargo = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
+    // Usamos un ancho ligeramente menor para el título para que no toque los bordes
     doc.text(doc.splitTextToSize(cargo, textWidth), margin, 65);
 
-    // --- Texto 2: Hace Constar ---
+    // --- Hace Constar ---
     doc.setFontSize(11);
     doc.text("HACE CONSTAR QUE:", pageWidth / 2, 88, { align: "center" });
 
-    // --- Texto 3: Párrafo Principal ---
+    // --- Párrafo Principal (EL QUE SE CORTABA) ---
+    // Bajamos a 10.5pt para que la justificación sea más fluida
     doc.setFont("helvetica", "normal");
+    doc.setFontSize(10.5); 
+    
     const nombre = (consejeroEncontrado["Nombre completo"] || "").toUpperCase();
     const cedula = consejeroEncontrado["No. Documento"] || "";
     const sector = consejeroEncontrado["Sector"] || "";
@@ -117,29 +122,31 @@ function generarCertificado() {
 
     const parrafo1 = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.`;
     
-    // El truco para que no se corte es splitTextToSize + align: justify
+    // Dividimos el texto con el nuevo ancho de seguridad
     const lineasP1 = doc.splitTextToSize(parrafo1, textWidth);
-    doc.text(lineasP1, margin, 105, { align: "justify" });
+    doc.text(lineasP1, margin, 105, { align: "justify", maxWidth: textWidth });
 
-    // --- Texto 4: Párrafo de Estado ---
+    // --- Párrafo de Estado ---
     const parrafo2 = "A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 17 del Decreto Distrital 336 de 2022.";
     const lineasP2 = doc.splitTextToSize(parrafo2, textWidth);
-    doc.text(lineasP2, margin, 142, { align: "justify" });
+    doc.text(lineasP2, margin, 142, { align: "justify", maxWidth: textWidth });
 
-    // --- Texto 5: Fecha ---
+    // --- Fecha ---
+    doc.setFontSize(10.5);
     const hoy = new Date();
     const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
     const fechaTexto = `La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
     doc.text(doc.splitTextToSize(fechaTexto, textWidth), margin, 165);
 
-    // --- Texto 6: Firma ---
+    // --- Firma ---
     doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
     doc.text("JULIÁN FELIPE DUARTE ÁLVAREZ", margin, 205);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.text("Director de Asuntos Locales y Participación", margin, 211);
     doc.text("Secretaría de Cultura, Recreación y Deporte", margin, 216);
 
-    // Descargar
+    // Guardar
     doc.save(`Certificado_${cedula}.pdf`);
 }
