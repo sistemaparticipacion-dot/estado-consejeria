@@ -1,84 +1,62 @@
-let datosConsejero = null;
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3JA8VgkELRklNZYma5R7Mt2JD7qWkOdPPdBS60K5dtggYeJZTjaG7LD7KzWx_9xxGDtgk7Spbixmj/pub?output=csv';
+
+let datosConsejeros = [];
+
+// Función para cargar los datos desde Google Sheets al abrir la página
+async function cargarDatos() {
+    try {
+        const respuesta = await fetch(SHEET_CSV_URL);
+        const texto = await respuesta.text();
+        
+        // Convertimos el CSV a un formato que el buscador entienda
+        const filas = texto.split('\n').slice(1); // Quitamos la fila de títulos
+        datosConsejeros = filas.map(fila => {
+            const columnas = fila.split(',');
+            return {
+                nombre: columnas[0]?.trim(),
+                documento: columnas[1]?.trim(),
+                consejo: columnas[2]?.trim(),
+                sector: columnas[3]?.trim(),
+                estado: columnas[4]?.trim()
+            };
+        });
+        console.log("Base de datos cargada desde Google Sheets");
+    } catch (error) {
+        console.error("Error cargando Google Sheets:", error);
+    }
+}
+
+// Llamamos a la función al cargar la página
+cargarDatos();
 
 async function consultar() {
-    const input = document.getElementById("documento").value.trim();
+    const inputDoc = document.getElementById("documento").value.trim();
     const resBox = document.getElementById("resBox");
     const btnPdf = document.getElementById("btnCertificado");
 
-    // 1. Limpieza inicial
-    resBox.style.display = "none";
-    btnPdf.style.display = "none";
-    resBox.innerHTML = "Cargando..."; // Mensaje temporal para saber que el clic funcionó
+    if (!inputDoc) return;
 
-    if (!input) {
-        resBox.className = "resultado error";
-        resBox.innerHTML = "⚠️ Por favor, ingresa un número de documento.";
-        resBox.style.display = "block";
-        return;
-    }
+    // Buscamos en los datos cargados de la hoja
+    const consejero = datosConsejeros.find(c => c.documento === inputDoc);
 
-    try {
-        // 2. Intentar cargar el JSON
-        // Agregamos un parámetro aleatorio (?v=...) para evitar que el navegador use una versión vieja guardada en memoria
-        const resp = await fetch("consejeros.json?v=" + Math.random());
-        
-        if (!resp.ok) {
-            throw new Error("No se pudo cargar el archivo consejeros.json. Verifica el nombre.");
-        }
+    if (consejero) {
+        window.datosConsejeroActual = consejero; // Guardar para el PDF
+        const esActivo = consejero.estado.toLowerCase().includes("activo");
 
-        const data = await resp.json();
-
-        // 3. Buscar el documento (lo tratamos como texto para evitar errores de formato)
-        const encontrado = data.find(c => String(c["No. Documento"]) === String(input));
-
-        if (encontrado) {
-            datosConsejero = encontrado;
+        if (esActivo) {
             resBox.className = "resultado activo";
-            resBox.innerHTML = `✅ <strong>${encontrado["Nombre completo"] || encontrado["Nombre"]}</strong><br>Estado: <strong>${encontrado["Estado"] || "ACTIVO"}</strong><br><small>${encontrado["Consejo"] || ""}</small>`;
-            resBox.style.display = "block";
+            resBox.innerHTML = `✅ <strong>${consejero.nombre}</strong><br>Estado: ACTIVO<br><small>${consejero.consejo}</small>`;
             btnPdf.style.display = "block";
-            reproducirSonido("activo");
         } else {
             resBox.className = "resultado error";
-            resBox.innerHTML = "❌ El número de documento no se encuentra en nuestra base de datos oficial.";
-            resBox.style.display = "block";
-            reproducirSonido("error");
+            resBox.innerHTML = `⚠️ <strong>${consejero.nombre}</strong><br>Estado: INACTIVO`;
+            btnPdf.style.display = "none";
         }
-    } catch (e) {
-        console.error("Error detallado:", e);
-        resBox.className = "resultado error";
-        resBox.innerHTML = "<b>Error técnico:</b> No se pudo leer la base de datos. <br>Asegúrate de que el archivo <u>consejeros.json</u> esté en la misma carpeta que el index.html.";
         resBox.style.display = "block";
+    } else {
+        resBox.className = "resultado error";
+        resBox.innerHTML = "❌ Documento no encontrado.";
+        resBox.style.display = "block";
+        btnPdf.style.display = "none";
     }
-}
-
-function reproducirSonido(tipo) {
-    const audio = new Audio(`sonido_${tipo}.mp3`);
-    audio.play().catch(err => console.log("Sonido bloqueado por el navegador hasta que interactúes."));
-}
-
-function generarCertificado() {
-    if (!datosConsejero) return;
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.text("CERTIFICADO DE CONSEJERÍA", 105, 40, { align: "center" });
-    
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    doc.text("El Sistema Distrital de Arte, Cultura y Patrimonio certifica que:", 20, 60);
-    
-    doc.setFont("helvetica", "bold");
-    doc.text(`${datosConsejero["Nombre completo"] || datosConsejero["Nombre"]}`, 20, 75);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Identificado con No. Documento: ${datosConsejero["No. Documento"]}`, 20, 85);
-    doc.text(`Consejo: ${datosConsejero["Consejo"] || "N/A"}`, 20, 95);
-    doc.text(`Sector: ${datosConsejero["Sector"] || "N/A"}`, 20, 105);
-    
-    const fecha = new Date().toLocaleDateString();
-    doc.text(`Fecha de expedición: ${fecha}`, 20, 140);
-    
-    doc.save(`Certificado_${datosConsejero["No. Documento"]}.pdf`);
 }
