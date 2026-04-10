@@ -2,20 +2,20 @@ body {
     font-family: Arial, sans-serif;
     text-align: center;
     margin-top: 50px;
-    background-color: #FF526C; /* Color institucional de fondo */
+    background-color: #FF526C; 
 }
 
 h1 {
-    color: #ffb71b; /* Color institucional para el título */
+    color: #ffb71b; 
 }
 
 p, li {
-    color: white; /* Texto descriptivo en blanco */
+    color: white;
 }
 
 ul {
-    list-style: none; /* Quita los puntos negros de la lista */
-    padding-left: 0; /* Elimina la sangría */
+    list-style: none;
+    padding-left: 0; 
 }
 
 input {
@@ -38,7 +38,7 @@ button {
     margin-top: 20px;
     font-size: 18px;
     font-weight: bold;
-    color: white; /* Texto en blanco */
+    color: white;
 }
 
 /* Botón de regreso */
@@ -78,22 +78,22 @@ button {
 
 /* Adaptación para la imagen en móviles */
 img.logo-sistema {
-    max-width: 100%; /* Se adapta al tamaño del contenedor */
-    height: auto;    /* Mantiene la proporción */
+    max-width: 100%; 
+    height: auto;   
 }
 
 /* Adaptaciones para móviles */
 @media (max-width: 768px) {
     body {
-        margin-top: 20px; /* Menos espacio en pantallas pequeñas */
+        margin-top: 20px; 
     }
     
     input {
-        width: 90%; /* Hace que el campo de entrada sea más grande en móviles */
+        width: 90%; 
     }
 
     button {
-        width: 90%; /* El botón también se adapta al ancho de la pantalla */
+        width: 90%; 
         margin-top: 10px;
     }
 
