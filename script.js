@@ -4,33 +4,30 @@ let datosConsejeros = [];
 let consejeroEncontrado = null;
 let plantillaBase64 = null;
 
+// Cargar datos y plantilla
 async function inicializar() {
-    await cargarDatos();
-    try {
-        plantillaBase64 = await getBase64ImageFromUrl('plantilla.png');
-    } catch (e) { console.error("Error cargando plantilla"); }
-}
-
-async function cargarDatos() {
     try {
         const respuesta = await fetch(SHEET_CSV_URL + '&t=' + Date.now());
         const textoOriginal = await respuesta.text();
         
-        // Nueva lógica para separar filas respetando comas dentro de comillas
+        // Separar por filas y luego por comas de forma simple
         const filas = textoOriginal.split(/\r?\n/).filter(f => f.trim() !== "");
-        const cabeceras = filas[0].split(',').map(h => h.replace(/"/g, '').trim());
+        const cabeceras = filas[0].split(',').map(h => h.trim());
 
         datosConsejeros = filas.slice(1).map(fila => {
-            // Este Regex es clave: separa por comas pero NO si la coma está dentro de comillas
-            const valores = fila.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
+            const valores = fila.split(',');
             let obj = {};
             cabeceras.forEach((header, i) => {
-                let val = valores[i] ? valores[i].replace(/"/g, '').trim() : "";
-                obj[header] = val;
+                obj[header] = valores[i] ? valores[i].trim() : "";
             });
             return obj;
         });
-    } catch (error) { console.error("Error:", error); }
+
+        plantillaBase64 = await getBase64ImageFromUrl('plantilla.png');
+        console.log("Sistema listo.");
+    } catch (error) {
+        console.error("Error iniciando:", error);
+    }
 }
 
 function getBase64ImageFromUrl(imageUrl) {
@@ -57,16 +54,14 @@ async function consultar() {
 
     if (!inputDoc) return;
 
-    // Búsqueda flexible en todas las columnas por si acaso
-    consejeroEncontrado = datosConsejeros.find(c => {
-        return Object.values(c).some(v => String(v).trim() === inputDoc);
-    });
+    // Buscar coincidencia exacta en el documento 
+    consejeroEncontrado = datosConsejeros.find(c => String(c["No. Documento"]) === inputDoc);
 
     if (consejeroEncontrado) {
         resBox.style.display = "block";
         resBox.className = "resultado activo";
-        const nombreDisplay = (consejeroEncontrado["Nombre completo"] || "Consejero/a").toUpperCase();
-        resBox.innerHTML = `✅ <strong>${nombreDisplay}</strong><br>Estado: ACTIVO`;
+        const nombre = (consejeroEncontrado["Nombre completo"] || "CONSEJERO/A").toUpperCase();
+        resBox.innerHTML = `✅ <strong>${nombre}</strong><br>Estado: ACTIVO`;
         btnPdf.style.display = "block";
     } else {
         resBox.style.display = "block";
@@ -77,55 +72,55 @@ async function consultar() {
 }
 
 function generarCertificado() {
-    if (!consejeroEncontrado) return;
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // 1. FONDO: Plantilla oficial
-    if (plantillaBase64) {
-        doc.addImage(plantillaBase64, 'PNG', 0, 0, 210, 297);
+    if (!consejeroEncontrado || !plantillaBase64) {
+        alert("Espera un segundo a que cargue la plantilla...");
+        return;
     }
 
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    // 1. Fondo de la plantilla oficial
+    doc.addImage(plantillaBase64, 'PNG', 0, 0, 210, 297);
+
+    // 2. Configuración de texto
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "bold");
-    
-    // 2. TEXTO SUPERIOR (Cargo)
     doc.setFontSize(10);
+
+    // Cargo superior
     const cargo = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
-    doc.text(doc.splitTextToSize(cargo, 165), 22, 65);
+    doc.text(doc.splitTextToSize(cargo, 160), 25, 65);
 
     doc.setFontSize(11);
-    doc.text("HACE CONSTAR QUE:", pageWidth / 2, 88, { align: "center" });
+    doc.text("HACE CONSTAR QUE:", 105, 88, { align: "center" });
 
-    // 3. CUERPO DEL CERTIFICADO
+    // 3. Datos Dinámicos 
     doc.setFont("helvetica", "normal");
-    const nombreCompleto = (consejeroEncontrado["Nombre completo"] || "CONSEJERO/A").toUpperCase();
-    const documento = consejeroEncontrado["No. Documento"] || "N/A";
-    const sector = consejeroEncontrado["Sector"] || "N/A";
-    const consejo = consejeroEncontrado["Consejo"] || "N/A";
-    const resolucion = consejeroEncontrado["Acto de Reconocimiento"] || "Resolución No. 551 de 2023";
+    const nombre = (consejeroEncontrado["Nombre completo"]).toUpperCase();
+    const cedula = consejeroEncontrado["No. Documento"];
+    const sector = consejeroEncontrado["Sector"];
+    const consejo = consejeroEncontrado["Consejo"];
 
-    const parrafo1 = `${nombreCompleto}, identificado(a) con cédula de ciudadanía número ${documento}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.`;
+    const parrafo1 = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según Resolución No. 551 del 28 de julio de 2023.`;
     
-    doc.text(doc.splitTextToSize(parrafo1, 165), 22, 105, { align: "justify" });
+    doc.text(doc.splitTextToSize(parrafo1, 165), 25, 105, { align: "justify" });
 
     const parrafo2 = "A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 17 del Decreto Distrital 336 de 2022.";
-    doc.text(doc.splitTextToSize(parrafo2, 165), 22, 142, { align: "justify" });
+    doc.text(doc.splitTextToSize(parrafo2, 165), 25, 140, { align: "justify" });
 
-    // 4. FECHA
+    // 4. Fecha y Firma
     const hoy = new Date();
     const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
     const fechaTexto = `La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
-    doc.text(doc.splitTextToSize(fechaTexto, 165), 22, 165);
+    doc.text(doc.splitTextToSize(fechaTexto, 165), 25, 165);
 
-    // 5. FIRMA
     doc.setFont("helvetica", "bold");
-    doc.text("JULIÁN FELIPE DUARTE ÁLVAREZ", 22, 205);
+    doc.text("JULIÁN FELIPE DUARTE ÁLVAREZ", 25, 205);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text("Director de Asuntos Locales y Participación", 22, 211);
-    doc.text("Secretaría de Cultura, Recreación y Deporte", 22, 216);
+    doc.text("Director de Asuntos Locales y Participación", 25, 211);
+    doc.text("Secretaría de Cultura, Recreación y Deporte", 25, 216);
 
-    doc.save(`Certificado_${documento}.pdf`);
+    doc.save(`Certificado_${cedula}.pdf`);
 }
