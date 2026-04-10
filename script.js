@@ -216,7 +216,7 @@ function generarCertificado() {
     const nota = "Nota: Este certificado ha sido generado automáticamente desde el portal web Radar Cultural. Puede verificar la autenticidad del mismo a través del correo sistemaparticipacion@scrd.gov.co";
 
     const notaLines = doc.splitTextToSize(nota, textWidth);
-    doc.text(notaLines, margin, 220);
+    doc.text(notaLines, margin, 210);
 
     // ===============================
     // EXPORTAR
