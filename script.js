@@ -140,7 +140,7 @@ function generarCertificado() {
     const cargo = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
 
     const cargoLines = doc.splitTextToSize(cargo, textWidth);
-    doc.text(cargoLines, margin, y, { align: "center" });
+    doc.text(cargoLines, margin, y);
 
 
     y += cargoLines.length * 5;
