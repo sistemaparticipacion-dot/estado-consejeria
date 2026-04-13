@@ -201,6 +201,9 @@ function generarPDF() {
         const hoy = new Date();
         const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
+        // =========================
+        // JUSTIFICADO CORREGIDO
+        // =========================
         function justificarTexto(texto, x, y, maxWidth, lineHeight) {
 
             const palabras = texto.split(' ');
@@ -222,11 +225,19 @@ function generarPDF() {
             lineas.forEach((lp, i) => {
 
                 const last = i === lineas.length - 1;
+                const textoLinea = lp.join(' ');
+                const anchoTexto = doc.getTextWidth(textoLinea);
 
-                if (lp.length === 1 || last) {
-                    doc.text(lp.join(' '), x, y);
+                // 🔥 REGLAS INTELIGENTES
+                if (
+                    last ||
+                    lp.length < 5 ||
+                    anchoTexto > maxWidth * 0.9
+                ) {
+                    doc.text(textoLinea, x, y);
                 } else {
-                    const espacio = (maxWidth - doc.getTextWidth(lp.join(' '))) / (lp.length - 1);
+
+                    const espacio = (maxWidth - anchoTexto) / (lp.length - 1);
                     let offset = x;
 
                     lp.forEach((p, idx) => {
@@ -267,9 +278,9 @@ function generarPDF() {
 
         const textoCompleto = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.
         
-        A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.
+A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.
 
-        La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
+La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
 
         y = justificarTexto(textoCompleto, margin, y, maxWidth, 6);
 
@@ -298,7 +309,7 @@ function generarPDF() {
 
         doc.save(`Certificado_${cedula}.pdf`);
 
-        // LIMPIAR DESPUÉS DE DESCARGAR
+        // LIMPIAR DESPUÉS
         limpiarFormulario();
 
     } catch (error) {
