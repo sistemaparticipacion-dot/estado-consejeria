@@ -1,89 +1,193 @@
+/* =========================
+   VARIABLES
+========================= */
 :root {
-    --primario: #0b3c6d;
+    --primario: #d8c0ff; /* Color original restaurado */
     --acento: #f1c40f;
     --fondo: #f4f7f9;
+    --blanco: #ffffff;
+    --texto: #333;
+}
+
+/* =========================
+   RESET BÁSICO
+========================= */
+* {
+    box-sizing: border-box;
 }
 
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: var(--fondo);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--fondo);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
+/* =========================
+   HEADER
+========================= */
 header {
-    background: var(--primario);
+    background-color: var(--primario);
     padding: 20px;
     text-align: center;
 }
 
 header img {
-    max-width: 250px;
+    max-width: 300px; /* tamaño controlado */
+    width: 100%;
+    height: auto;
 }
 
+/* =========================
+   CONTENEDOR PRINCIPAL
+========================= */
 .contenedor {
     display: grid;
+    grid-template-columns: 1fr;
     gap: 20px;
     padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    flex: 1;
 }
 
-@media(min-width:768px){
-    .contenedor{
+@media (min-width: 768px) {
+    .contenedor {
         grid-template-columns: 1.5fr 1fr;
     }
 }
 
+/* =========================
+   TARJETAS
+========================= */
 .tarjeta {
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
+    background: var(--blanco);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
+/* =========================
+   IMAGEN SISTEMA
+========================= */
 .img-sistema {
     width: 100%;
-    max-width: 350px;
+    max-width: 400px;
+    margin: 20px auto;
     display: block;
-    margin: auto;
+    border-radius: 8px;
 }
 
+/* =========================
+   INPUT
+========================= */
 input {
     width: 100%;
-    padding: 12px;
-    margin-top: 10px;
+    padding: 15px;
+    margin: 15px 0;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
 }
 
+/* =========================
+   BOTONES
+========================= */
 .btn {
     width: 100%;
-    padding: 12px;
-    margin-top: 15px;
+    padding: 15px;
     border: none;
+    border-radius: 8px;
+    font-weight: bold;
     cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s;
 }
 
 .btn-consultar {
-    background: var(--acento);
+    background-color: var(--acento);
+    color: #000;
 }
 
 .btn-pdf {
-    background: var(--primario);
-    color: white;
+    background-color: var(--primario);
+    color: #fff;
+    margin-top: 15px;
     display: none;
 }
 
+/* =========================
+   RESULTADOS
+========================= */
 .resultado {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
     display: none;
-    margin-top: 15px;
-    padding: 10px;
+    border-left: 5px solid;
 }
 
 .activo {
     background: #d4edda;
+    color: #155724;
+    border-color: #28a745;
 }
 
 .error {
     background: #f8d7da;
+    color: #721c24;
+    border-color: #dc3545;
 }
 
+/* =========================
+   FOOTER
+========================= */
 footer {
-    text-align: center;
+    background: #eee;
     padding: 20px;
+    text-align: center;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+footer img {
+    max-height: 50px; /* 🔥 CORRECCIÓN CLAVE */
+    width: auto;
+}
+
+/* =========================
+   PROTECCIÓN GLOBAL DE IMÁGENES
+========================= */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+
+    header img {
+        max-width: 200px;
+    }
+
+    .tarjeta {
+        padding: 20px;
+    }
+
+    input {
+        font-size: 14px;
+    }
+
+    .btn {
+        font-size: 14px;
+        padding: 12px;
+    }
 }
