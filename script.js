@@ -196,7 +196,7 @@ function generarPDF() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
 
-    const encabezado = "LA SUSCRITA DIRECTORA DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
+    const encabezado = "El SUSCRITo DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
 
     const encLines = doc.splitTextToSize(encabezado, maxWidth);
     doc.text(encLines, width / 2, y, { align: "center" });
