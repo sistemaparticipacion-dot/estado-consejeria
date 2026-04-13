@@ -1,174 +1,3 @@
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3JA8VgkELRklNZYma5R7Mt2JD7qWkOdPPdBS60K5dtggYeJZTjaG7LD7KzWx_9xxGDtgk7Spbixmj/pub?output=csv';
-
-let datos = [];
-let seleccionado = null;
-let plantilla = null;
-let cargado = false;
-
-// =========================
-// NORMALIZAR DOCUMENTO
-// =========================
-function limpiarDoc(valor) {
-    return String(valor || "").replace(/\D/g, "").trim();
-}
-
-// =========================
-// INICIALIZACIÓN
-// =========================
-document.addEventListener("DOMContentLoaded", () => {
-    init();
-});
-
-async function init() {
-    conectarEventos();
-    await cargarDatos();
-    await cargarPlantilla();
-}
-
-// =========================
-// EVENTOS
-// =========================
-function conectarEventos() {
-
-    const btnConsultar = document.getElementById("btnConsultar");
-    const input = document.getElementById("documento");
-    const btnPdf = document.getElementById("btnCertificado");
-
-    btnConsultar.addEventListener("click", consultar);
-
-    input.addEventListener("keypress", function(e) {
-        if (e.key === "Enter") consultar();
-    });
-
-    btnPdf.addEventListener("click", generarPDF);
-
-    input.addEventListener("input", () => {
-        document.getElementById("resBox").style.display = "none";
-        btnPdf.style.display = "none";
-    });
-}
-
-// =========================
-// CARGAR DATOS
-// =========================
-async function cargarDatos() {
-    try {
-        const res = await fetch(SHEET_URL + "&t=" + Date.now());
-        const text = await res.text();
-
-        const filas = text.split(/\r?\n/).filter(f => f.trim());
-        const headers = filas[0].split(',').map(h => h.trim());
-
-        datos = filas.slice(1).map(fila => {
-            const cols = fila.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
-
-            let obj = {};
-            headers.forEach((h, i) => {
-                obj[h] = (cols[i] || "").replace(/"/g, "").trim();
-            });
-
-            obj._doc = limpiarDoc(obj["No. Documento"]);
-            return obj;
-        });
-
-        cargado = true;
-        console.log("✅ Datos cargados:", datos.length);
-
-    } catch (error) {
-        console.error("❌ Error cargando datos:", error);
-    }
-}
-
-// =========================
-// CARGAR PLANTILLA
-// =========================
-async function cargarPlantilla() {
-    try {
-        const img = new Image();
-        img.src = "plantilla.png";
-        img.crossOrigin = "Anonymous";
-
-        await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-        });
-
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
-
-        plantilla = canvas.toDataURL("image/png");
-
-    } catch (error) {
-        console.warn("⚠️ No se pudo cargar la plantilla");
-    }
-}
-
-// =========================
-// CONSULTAR
-// =========================
-function consultar() {
-
-    if (!cargado) {
-        alert("La base de datos aún está cargando.");
-        return;
-    }
-
-    const input = limpiarDoc(document.getElementById("documento").value);
-    const resBox = document.getElementById("resBox");
-    const btnPdf = document.getElementById("btnCertificado");
-
-    if (!input) return;
-
-    seleccionado = datos.find(d => d._doc === input);
-
-    if (seleccionado) {
-
-        resBox.style.display = "block";
-        resBox.className = "resultado activo";
-
-        resBox.innerHTML = `
-            ✅ <strong>${seleccionado["Nombre completo"].toUpperCase()}</strong><br>
-            Presenta consejería ACTIVA en el Sistema Distrital de Arte, Cultura y Patrimonio.
-        `;
-
-        btnPdf.style.display = "block";
-
-    } else {
-
-        resBox.style.display = "block";
-        resBox.className = "resultado error";
-
-        resBox.innerHTML = "❌ Su documento no hace parte de la base de datos de consejeros del Sistema.";
-
-        btnPdf.style.display = "none";
-    }
-}
-
-// =========================
-// LIMPIAR FORMULARIO
-// =========================
-function limpiarFormulario() {
-
-    document.getElementById("documento").value = "";
-
-    const resBox = document.getElementById("resBox");
-    const btnPdf = document.getElementById("btnCertificado");
-
-    resBox.style.display = "none";
-    btnPdf.style.display = "none";
-
-    seleccionado = null;
-
-    document.getElementById("documento").focus();
-}
-
-// =========================
-// GENERAR PDF
-// =========================
 function generarPDF() {
 
     if (!seleccionado) {
@@ -187,10 +16,12 @@ function generarPDF() {
 
         let y = 60;
 
+        // Fondo
         if (plantilla) {
             doc.addImage(plantilla, "PNG", 0, 0, width, 279);
         }
 
+        // Datos
         const nombre = seleccionado["Nombre completo"].toUpperCase();
         const cedula = seleccionado["No. Documento"];
         const sector = seleccionado["Sector"];
@@ -201,6 +32,9 @@ function generarPDF() {
         const hoy = new Date();
         const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
+        // =========================
+        // FUNCIÓN JUSTIFICADO CORREGIDA
+        // =========================
         function justificarTexto(texto, x, y, maxWidth, lineHeight) {
 
             const palabras = texto.split(' ');
@@ -223,7 +57,8 @@ function generarPDF() {
 
                 const last = i === lineas.length - 1;
 
-                if (lp.length === 1 || last) {
+                // 🔥 SOLUCIÓN: evitar espacios raros
+                if (last || lp.length < 4) {
                     doc.text(lp.join(' '), x, y);
                 } else {
                     const espacio = (maxWidth - doc.getTextWidth(lp.join(' '))) / (lp.length - 1);
@@ -244,7 +79,9 @@ function generarPDF() {
             return y;
         }
 
-        // Encabezado
+        // =========================
+        // ENCABEZADO
+        // =========================
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
 
@@ -255,13 +92,17 @@ function generarPDF() {
 
         y += encLines.length * 5 + 10;
 
-        // Título
+        // =========================
+        // TÍTULO
+        // =========================
         doc.setFontSize(11);
         doc.text("HACE CONSTAR QUE:", width / 2, y, { align: "center" });
 
         y += 15;
 
-        // Cuerpo
+        // =========================
+        // CUERPO (JUSTIFICADO BIEN)
+        // =========================
         doc.setFont("helvetica", "normal");
         doc.setFontSize(10.5);
 
@@ -273,7 +114,9 @@ La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${m
 
         y = justificarTexto(textoCompleto, margin, y, maxWidth, 6);
 
-        // Firma
+        // =========================
+        // FIRMA
+        // =========================
         y += 20;
 
         doc.setFont("helvetica", "bold");
@@ -288,7 +131,9 @@ La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${m
         y += 5;
         doc.text("Secretaría de Cultura, Recreación y Deporte", width / 2, y, { align: "center" });
 
-        // Nota
+        // =========================
+        // NOTA
+        // =========================
         doc.setFontSize(6);
         doc.setTextColor(100);
 
@@ -296,9 +141,10 @@ La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${m
 
         doc.text(doc.splitTextToSize(nota, maxWidth), margin, 230);
 
+        // =========================
+        // DESCARGAR Y LIMPIAR
+        // =========================
         doc.save(`Certificado_${cedula}.pdf`);
-
-        // LIMPIAR DESPUÉS DE DESCARGAR
         limpiarFormulario();
 
     } catch (error) {
