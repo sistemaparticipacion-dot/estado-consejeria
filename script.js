@@ -168,7 +168,7 @@ function generarPDF() {
     const margin = 25;
     const maxWidth = width - (margin * 2);
 
-    let y = 40;
+    let y = 60;
 
     // Fondo
     if (plantilla) {
@@ -239,12 +239,12 @@ function generarPDF() {
     doc.text("Secretaría de Cultura, Recreación y Deporte", width / 2, y, { align: "center" });
 
     // Nota
-    doc.setFontSize(7);
+    doc.setFontSize(6);
     doc.setTextColor(100);
 
     const nota = "Nota: Este certificado ha sido generado automáticamente desde el portal web Radar Cultural. Puede verificar la autenticidad del mismo a través del correo sistemaparticipacion@scrd.gov.co";
 
-    doc.text(doc.splitTextToSize(nota, maxWidth), margin, 260);
+    doc.text(doc.splitTextToSize(nota, maxWidth), margin, 230);
 
     doc.save(`Certificado_${cedula}.pdf`);
 }
