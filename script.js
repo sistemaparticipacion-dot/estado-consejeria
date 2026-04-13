@@ -13,7 +13,7 @@ function limpiarDoc(valor) {
 }
 
 // =========================
-// INICIALIZACIÓN SEGURA
+// INICIALIZACIÓN
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
     init();
@@ -26,7 +26,7 @@ async function init() {
 }
 
 // =========================
-// CONECTAR EVENTOS
+// EVENTOS
 // =========================
 function conectarEventos() {
 
@@ -34,20 +34,14 @@ function conectarEventos() {
     const input = document.getElementById("documento");
     const btnPdf = document.getElementById("btnCertificado");
 
-    // CLICK BOTÓN
     btnConsultar.addEventListener("click", consultar);
 
-    // ENTER EN INPUT
     input.addEventListener("keypress", function(e) {
-        if (e.key === "Enter") {
-            consultar();
-        }
+        if (e.key === "Enter") consultar();
     });
 
-    // BOTÓN PDF
     btnPdf.addEventListener("click", generarPDF);
 
-    // LIMPIAR RESULTADO AL ESCRIBIR
     input.addEventListener("input", () => {
         document.getElementById("resBox").style.display = "none";
         btnPdf.style.display = "none";
@@ -55,7 +49,7 @@ function conectarEventos() {
 }
 
 // =========================
-// CARGAR DATOS GOOGLE SHEETS
+// CARGAR DATOS
 // =========================
 async function cargarDatos() {
     try {
@@ -86,7 +80,7 @@ async function cargarDatos() {
 }
 
 // =========================
-// CARGAR PLANTILLA (NO BLOQUEANTE)
+// CARGAR PLANTILLA
 // =========================
 async function cargarPlantilla() {
     try {
@@ -109,7 +103,7 @@ async function cargarPlantilla() {
         plantilla = canvas.toDataURL("image/png");
 
     } catch (error) {
-        console.warn("⚠️ No se pudo cargar la plantilla, pero el sistema sigue funcionando");
+        console.warn("⚠️ No se pudo cargar la plantilla");
     }
 }
 
@@ -119,7 +113,7 @@ async function cargarPlantilla() {
 function consultar() {
 
     if (!cargado) {
-        alert("La base de datos aún está cargando, intenta nuevamente en unos segundos.");
+        alert("La base de datos aún está cargando.");
         return;
     }
 
@@ -155,96 +149,160 @@ function consultar() {
 }
 
 // =========================
-// GENERAR CERTIFICADO
+// LIMPIAR FORMULARIO
+// =========================
+function limpiarFormulario() {
+
+    document.getElementById("documento").value = "";
+
+    const resBox = document.getElementById("resBox");
+    const btnPdf = document.getElementById("btnCertificado");
+
+    resBox.style.display = "none";
+    btnPdf.style.display = "none";
+
+    seleccionado = null;
+
+    document.getElementById("documento").focus();
+}
+
+// =========================
+// GENERAR PDF
 // =========================
 function generarPDF() {
 
-    if (!seleccionado) return;
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p", "mm", "letter");
-
-    const width = doc.internal.pageSize.getWidth();
-    const margin = 25;
-    const maxWidth = width - (margin * 2);
-
-    let y = 60;
-
-    // Fondo
-    if (plantilla) {
-        doc.addImage(plantilla, "PNG", 0, 0, width, 279);
+    if (!seleccionado) {
+        alert("No hay datos para generar el certificado.");
+        return;
     }
 
-    // Datos
-    const nombre = seleccionado["Nombre completo"].toUpperCase();
-    const cedula = seleccionado["No. Documento"];
-    const sector = seleccionado["Sector"];
-    const consejo = seleccionado["Consejo"];
-    const resolucion = seleccionado["Acto de reconocimiento (numero Resolución)"] 
-        || "Resolución No. 551 del 28 de julio de 2023";
+    try {
 
-    const hoy = new Date();
-    const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF("p", "mm", "letter");
 
-    function escribirParrafo(texto) {
-        const lineas = doc.splitTextToSize(texto, maxWidth);
-        doc.text(lineas, margin, y);
-        y += lineas.length * 6;
+        const width = doc.internal.pageSize.getWidth();
+        const margin = 25;
+        const maxWidth = width - (margin * 2);
+
+        let y = 60;
+
+        if (plantilla) {
+            doc.addImage(plantilla, "PNG", 0, 0, width, 279);
+        }
+
+        const nombre = seleccionado["Nombre completo"].toUpperCase();
+        const cedula = seleccionado["No. Documento"];
+        const sector = seleccionado["Sector"];
+        const consejo = seleccionado["Consejo"];
+        const resolucion = seleccionado["Acto de reconocimiento (numero Resolución)"] 
+            || "Resolución No. 551 del 28 de julio de 2023";
+
+        const hoy = new Date();
+        const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+        function justificarTexto(texto, x, y, maxWidth, lineHeight) {
+
+            const palabras = texto.split(' ');
+            let linea = [];
+            let lineas = [];
+
+            palabras.forEach(palabra => {
+                const test = [...linea, palabra].join(' ');
+                if (doc.getTextWidth(test) > maxWidth && linea.length) {
+                    lineas.push(linea);
+                    linea = [palabra];
+                } else {
+                    linea.push(palabra);
+                }
+            });
+
+            if (linea.length) lineas.push(linea);
+
+            lineas.forEach((lp, i) => {
+
+                const last = i === lineas.length - 1;
+
+                if (lp.length === 1 || last) {
+                    doc.text(lp.join(' '), x, y);
+                } else {
+                    const espacio = (maxWidth - doc.getTextWidth(lp.join(' '))) / (lp.length - 1);
+                    let offset = x;
+
+                    lp.forEach((p, idx) => {
+                        doc.text(p, offset, y);
+
+                        if (idx < lp.length - 1) {
+                            offset += doc.getTextWidth(p + ' ') + espacio;
+                        }
+                    });
+                }
+
+                y += lineHeight;
+            });
+
+            return y;
+        }
+
+        // Encabezado
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+
+        const encabezado = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
+
+        const encLines = doc.splitTextToSize(encabezado, maxWidth);
+        doc.text(encLines, width / 2, y, { align: "center" });
+
+        y += encLines.length * 5 + 10;
+
+        // Título
+        doc.setFontSize(11);
+        doc.text("HACE CONSTAR QUE:", width / 2, y, { align: "center" });
+
+        y += 15;
+
+        // Cuerpo
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10.5);
+
+        const textoCompleto = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.
+        
+A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.
+
+La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
+
+        y = justificarTexto(textoCompleto, margin, y, maxWidth, 6);
+
+        // Firma
+        y += 20;
+
+        doc.setFont("helvetica", "bold");
+        doc.text("JULIÁN FELIPE DUARTE ÁLVAREZ", width / 2, y, { align: "center" });
+
+        y += 6;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9.5);
+
+        doc.text("Director de Asuntos Locales y Participación", width / 2, y, { align: "center" });
+        y += 5;
+        doc.text("Secretaría de Cultura, Recreación y Deporte", width / 2, y, { align: "center" });
+
+        // Nota
+        doc.setFontSize(6);
+        doc.setTextColor(100);
+
+        const nota = "Nota: Este certificado ha sido generado automáticamente desde el portal web Radar Cultural. Puede verificar la autenticidad del mismo a través del correo sistemaparticipacion@scrd.gov.co";
+
+        doc.text(doc.splitTextToSize(nota, maxWidth), margin, 230);
+
+        doc.save(`Certificado_${cedula}.pdf`);
+
+        // LIMPIAR DESPUÉS DE DESCARGAR
+        limpiarFormulario();
+
+    } catch (error) {
+        console.error("❌ Error generando PDF:", error);
+        alert("Error generando el certificado.");
     }
-
-    // Encabezado
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-
-    const encabezado = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
-
-    const encLines = doc.splitTextToSize(encabezado, maxWidth);
-    doc.text(encLines, width / 2, y, { align: "center" });
-
-    y += encLines.length * 5 + 10;
-
-    // Título
-    doc.setFontSize(11);
-    doc.text("HACE CONSTAR QUE:", width / 2, y, { align: "center" });
-
-    y += 15;
-
-    // Cuerpo
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10.5);
-
-    escribirParrafo(`${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.`);
-
-    y += 5;
-
-    escribirParrafo("A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.");
-
-    y += 10;
-
-    escribirParrafo(`La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`);
-
-    y += 25;
-
-    // Firma
-    doc.setFont("helvetica", "bold");
-    doc.text("JULIÁN FELIPE DUARTE ÁLVAREZ", width / 2, y, { align: "center" });
-
-    y += 6;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9.5);
-
-    doc.text("Director de Asuntos Locales y Participación", width / 2, y, { align: "center" });
-    y += 5;
-    doc.text("Secretaría de Cultura, Recreación y Deporte", width / 2, y, { align: "center" });
-
-    // Nota
-    doc.setFontSize(6);
-    doc.setTextColor(100);
-
-    const nota = "Nota: Este certificado ha sido generado automáticamente desde el portal web Radar Cultural. Puede verificar la autenticidad del mismo a través del correo sistemaparticipacion@scrd.gov.co";
-
-    doc.text(doc.splitTextToSize(nota, maxWidth), margin, 230);
-
-    doc.save(`Certificado_${cedula}.pdf`);
 }
