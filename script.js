@@ -183,7 +183,7 @@ function generarPDF() {
     // ===============================
     // 📄 PÁRRAFO 2
     // ===============================
-    const p2 = "A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 17 del Decreto Distrital 336 de 2022.";
+    const p2 = "A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.";
 
     y = justificar(p2, margin, y);
 
@@ -216,7 +216,7 @@ function generarPDF() {
     // ===============================
     // 📌 NOTA
     // ===============================
-    doc.setFontSize(7);
+    doc.setFontSize(6);
     doc.setTextColor(100);
 
     const nota = "Nota: Este certificado ha sido generado automáticamente desde el portal web Radar Cultural. Puede verificar la autenticidad del mismo a través del correo sistemaparticipacion@scrd.gov.co";
