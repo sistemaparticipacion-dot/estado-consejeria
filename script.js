@@ -223,7 +223,7 @@ y = y + blockHeight + espacioExtra;
     // ===============================
     // 6. NOTA AL PIE
     // ===============================
-    doc.setFontSize(5);
+    doc.setFontSize(6);
     doc.setTextColor(100, 100, 100);
 
     const nota = "Nota: Este certificado ha sido generado automáticamente desde el portal web Radar Cultural. Puede verificar la autenticidad del mismo a través del correo sistemaparticipacion@scrd.gov.co";
