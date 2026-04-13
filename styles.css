@@ -1,103 +1,89 @@
+:root {
+    --primario: #0b3c6d;
+    --acento: #f1c40f;
+    --fondo: #f4f7f9;
+}
+
 body {
+    margin: 0;
     font-family: Arial, sans-serif;
+    background: var(--fondo);
+}
+
+header {
+    background: var(--primario);
+    padding: 20px;
     text-align: center;
-    margin-top: 50px;
-    background-color: #FF526C; 
 }
 
-h1 {
-    color: #ffb71b; 
+header img {
+    max-width: 250px;
 }
 
-p, li {
-    color: white;
+.contenedor {
+    display: grid;
+    gap: 20px;
+    padding: 20px;
 }
 
-ul {
-    list-style: none;
-    padding-left: 0; 
+@media(min-width:768px){
+    .contenedor{
+        grid-template-columns: 1.5fr 1fr;
+    }
+}
+
+.tarjeta {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+}
+
+.img-sistema {
+    width: 100%;
+    max-width: 350px;
+    display: block;
+    margin: auto;
 }
 
 input {
-    padding: 10px;
-    width: 120px;
-    font-size: 16px;   
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
 }
 
-button {
-    padding: 10px 20px;
-    margin-left: 10px;
-    background-color: #007bff;
-    color: white;
+.btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
     border: none;
-    border-radius: 5px;
     cursor: pointer;
 }
 
-#resultado {
-    margin-top: 20px;
-    font-size: 18px;
-    font-weight: bold;
+.btn-consultar {
+    background: var(--acento);
+}
+
+.btn-pdf {
+    background: var(--primario);
     color: white;
+    display: none;
 }
 
-/* Botón de regreso */
-.btn-regreso {
-    display: inline-block;
-    background-color: #ffb71b;
-    color: #6f4c9c;
-    padding: 10px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    margin-top: 20px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+.resultado {
+    display: none;
+    margin-top: 15px;
+    padding: 10px;
 }
 
-.btn-regreso:hover {
-    background-color: #ffd454;
+.activo {
+    background: #d4edda;
 }
 
-/* Estilo para la tarjeta */
-.tarjeta {
-    background-color: rgba(0, 0, 0, 0.3);
+.error {
+    background: #f8d7da;
+}
+
+footer {
+    text-align: center;
     padding: 20px;
-    border-radius: 12px;
-    display: inline-block;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-    max-width: 600px;
-    margin: 20px auto 0;
-}
-
-/* Ícono grande (emoji) para resultados */
-#resultado .icono {
-    font-size: 48px;
-    display: block;
-    margin-bottom: 10px;
-}
-
-/* Adaptación para la imagen en móviles */
-img.logo-sistema {
-    max-width: 100%; 
-    height: auto;   
-}
-
-/* Adaptaciones para móviles */
-@media (max-width: 768px) {
-    body {
-        margin-top: 20px; 
-    }
-    
-    input {
-        width: 90%; 
-    }
-
-    button {
-        width: 90%; 
-        margin-top: 10px;
-    }
-
-    #resultado {
-        font-size: 16px; /* Ajusta el tamaño de la fuente para pantallas pequeñas */
-    }
 }
