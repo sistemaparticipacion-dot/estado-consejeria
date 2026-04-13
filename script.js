@@ -135,13 +135,25 @@ function generarCertificado() {
     // 1. ENCABEZADO
     // ===============================
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
+doc.setFontSize(10);
 
-    const cargo = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
+const cargo = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
 
-    const cargoLines = doc.splitTextToSize(cargo, textWidth);
-    doc.text(cargoLines, margin, y);
+const pageWidth = doc.internal.pageSize.getWidth();
+const cargoLines = doc.splitTextToSize(cargo, pageWidth - 40);
 
+// Dibujar texto centrado
+doc.text(cargoLines, pageWidth / 2, y, { align: "center" });
+
+// Calcular altura ocupada
+const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor;
+const blockHeight = cargoLines.length * lineHeight;
+
+// 👇 Aquí defines el espacio adicional
+const espacioExtra = 10;
+
+// Nueva posición Y para el siguiente texto
+y = y + blockHeight + espacioExtra;
 
     y += cargoLines.length * 5;
 
