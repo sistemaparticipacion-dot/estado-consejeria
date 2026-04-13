@@ -5,17 +5,58 @@ let seleccionado = null;
 let plantilla = null;
 let cargado = false;
 
-// 🔹 Normalizar documento
-const limpiarDoc = v => String(v || "").replace(/\D/g, "");
-
-// 🚀 INIT
-async function init() {
-    await cargarDatos();
-    cargarPlantilla();
-    conectarEventos();
+// =========================
+// NORMALIZAR DOCUMENTO
+// =========================
+function limpiarDoc(valor) {
+    return String(valor || "").replace(/\D/g, "").trim();
 }
 
-// 📥 Cargar CSV
+// =========================
+// INICIALIZACIÓN SEGURA
+// =========================
+document.addEventListener("DOMContentLoaded", () => {
+    init();
+});
+
+async function init() {
+    conectarEventos();
+    await cargarDatos();
+    await cargarPlantilla();
+}
+
+// =========================
+// CONECTAR EVENTOS
+// =========================
+function conectarEventos() {
+
+    const btnConsultar = document.getElementById("btnConsultar");
+    const input = document.getElementById("documento");
+    const btnPdf = document.getElementById("btnCertificado");
+
+    // CLICK BOTÓN
+    btnConsultar.addEventListener("click", consultar);
+
+    // ENTER EN INPUT
+    input.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            consultar();
+        }
+    });
+
+    // BOTÓN PDF
+    btnPdf.addEventListener("click", generarPDF);
+
+    // LIMPIAR RESULTADO AL ESCRIBIR
+    input.addEventListener("input", () => {
+        document.getElementById("resBox").style.display = "none";
+        btnPdf.style.display = "none";
+    });
+}
+
+// =========================
+// CARGAR DATOS GOOGLE SHEETS
+// =========================
 async function cargarDatos() {
     try {
         const res = await fetch(SHEET_URL + "&t=" + Date.now());
@@ -39,76 +80,83 @@ async function cargarDatos() {
         cargado = true;
         console.log("✅ Datos cargados:", datos.length);
 
-    } catch (e) {
-        console.error("❌ Error cargando datos", e);
+    } catch (error) {
+        console.error("❌ Error cargando datos:", error);
     }
 }
 
-// 🖼 Plantilla
+// =========================
+// CARGAR PLANTILLA (NO BLOQUEANTE)
+// =========================
 async function cargarPlantilla() {
     try {
         const img = new Image();
         img.src = "plantilla.png";
         img.crossOrigin = "Anonymous";
 
-        await new Promise((res, rej) => {
-            img.onload = res;
-            img.onerror = rej;
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
         });
 
         const canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
-        canvas.getContext("2d").drawImage(img, 0, 0);
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
 
         plantilla = canvas.toDataURL("image/png");
 
-    } catch {
-        console.warn("⚠️ Sin plantilla, pero sistema funcional");
+    } catch (error) {
+        console.warn("⚠️ No se pudo cargar la plantilla, pero el sistema sigue funcionando");
     }
 }
 
-// 🔘 Eventos
-function conectarEventos() {
-    document.getElementById("btnConsultar").addEventListener("click", consultar);
-    document.getElementById("btnCertificado").addEventListener("click", generarPDF);
-}
-
-// 🔍 CONSULTAR
+// =========================
+// CONSULTAR
+// =========================
 function consultar() {
 
     if (!cargado) {
-        alert("Cargando base de datos...");
+        alert("La base de datos aún está cargando, intenta nuevamente en unos segundos.");
         return;
     }
 
     const input = limpiarDoc(document.getElementById("documento").value);
-    const box = document.getElementById("resBox");
-    const btn = document.getElementById("btnCertificado");
+    const resBox = document.getElementById("resBox");
+    const btnPdf = document.getElementById("btnCertificado");
 
     if (!input) return;
 
     seleccionado = datos.find(d => d._doc === input);
 
-    if (!seleccionado) {
-        box.className = "resultado error";
-        box.innerHTML = "❌ Documento no encontrado";
-        box.style.display = "block";
-        btn.style.display = "none";
-        return;
+    if (seleccionado) {
+
+        resBox.style.display = "block";
+        resBox.className = "resultado activo";
+
+        resBox.innerHTML = `
+            ✅ <strong>${seleccionado["Nombre completo"].toUpperCase()}</strong><br>
+            Presenta consejería ACTIVA en el Sistema Distrital de Arte, Cultura y Patrimonio.
+        `;
+
+        btnPdf.style.display = "block";
+
+    } else {
+
+        resBox.style.display = "block";
+        resBox.className = "resultado error";
+
+        resBox.innerHTML = "❌ Su documento no hace parte de la base de datos de consejeros del Sistema.";
+
+        btnPdf.style.display = "none";
     }
-
-    box.className = "resultado activo";
-    box.innerHTML = `
-        <strong>${seleccionado["Nombre completo"].toUpperCase()}</strong><br>
-        Consejería ACTIVA
-    `;
-    box.style.display = "block";
-
-    btn.style.display = "block";
 }
 
-// 📄 PDF
+// =========================
+// GENERAR CERTIFICADO
+// =========================
 function generarPDF() {
 
     if (!seleccionado) return;
@@ -122,12 +170,12 @@ function generarPDF() {
 
     let y = 40;
 
-    // 🖼 Fondo
+    // Fondo
     if (plantilla) {
         doc.addImage(plantilla, "PNG", 0, 0, width, 279);
     }
 
-    // 🧠 DATOS
+    // Datos
     const nombre = seleccionado["Nombre completo"].toUpperCase();
     const cedula = seleccionado["No. Documento"];
     const sector = seleccionado["Sector"];
@@ -138,18 +186,13 @@ function generarPDF() {
     const hoy = new Date();
     const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
-    // ===============================
-    // 🔥 FUNCIÓN JUSTIFICADO
-    // ===============================
-    function justificar(texto, x, y) {
+    function escribirParrafo(texto) {
         const lineas = doc.splitTextToSize(texto, maxWidth);
-        doc.text(lineas, x, y);
-        return y + (lineas.length * 6);
+        doc.text(lineas, margin, y);
+        y += lineas.length * 6;
     }
 
-    // ===============================
-    // 🏛 ENCABEZADO
-    // ===============================
+    // Encabezado
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
 
@@ -160,47 +203,29 @@ function generarPDF() {
 
     y += encLines.length * 5 + 10;
 
-    // ===============================
-    // 🧾 TÍTULO
-    // ===============================
+    // Título
     doc.setFontSize(11);
     doc.text("HACE CONSTAR QUE:", width / 2, y, { align: "center" });
 
     y += 15;
 
-    // ===============================
-    // 📄 PÁRRAFO 1
-    // ===============================
+    // Cuerpo
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10.5);
 
-    const p1 = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.`;
-
-    y = justificar(p1, margin, y);
+    escribirParrafo(`${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.`);
 
     y += 5;
 
-    // ===============================
-    // 📄 PÁRRAFO 2
-    // ===============================
-    const p2 = "A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.";
-
-    y = justificar(p2, margin, y);
+    escribirParrafo("A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.");
 
     y += 10;
 
-    // ===============================
-    // 📅 FECHA
-    // ===============================
-    const fecha = `La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
-
-    y = justificar(fecha, margin, y);
+    escribirParrafo(`La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`);
 
     y += 25;
 
-    // ===============================
-    // ✍️ FIRMA
-    // ===============================
+    // Firma
     doc.setFont("helvetica", "bold");
     doc.text("JULIÁN FELIPE DUARTE ÁLVAREZ", width / 2, y, { align: "center" });
 
@@ -213,19 +238,13 @@ function generarPDF() {
     y += 5;
     doc.text("Secretaría de Cultura, Recreación y Deporte", width / 2, y, { align: "center" });
 
-    // ===============================
-    // 📌 NOTA
-    // ===============================
-    doc.setFontSize(6);
+    // Nota
+    doc.setFontSize(7);
     doc.setTextColor(100);
 
     const nota = "Nota: Este certificado ha sido generado automáticamente desde el portal web Radar Cultural. Puede verificar la autenticidad del mismo a través del correo sistemaparticipacion@scrd.gov.co";
 
-    const notaLines = doc.splitTextToSize(nota, maxWidth);
-    doc.text(notaLines, margin, 260);
+    doc.text(doc.splitTextToSize(nota, maxWidth), margin, 260);
 
-    // ===============================
-    // 📄 EXPORTAR
-    // ===============================
     doc.save(`Certificado_${cedula}.pdf`);
 }
