@@ -229,25 +229,21 @@ function generarPDF() {
                 const anchoTexto = doc.getTextWidth(textoLinea);
 
                 // 🔥 REGLAS INTELIGENTES
-                if (
+              if (
                     last ||
-                    lp.length < 5 ||
-                    anchoTexto > maxWidth * 0.9
-                ) {
-                    doc.text(textoLinea, x, y);
-                } else {
-
-                    const espacio = (maxWidth - anchoTexto) / (lp.length - 1);
-                    let offset = x;
-
-                    lp.forEach((p, idx) => {
-                        doc.text(p, offset, y);
-
-                        if (idx < lp.length - 1) {
-                            offset += doc.getTextWidth(p + ' ') + espacio;
-                        }
-                    });
-                }
+                anchoTexto > maxWidth * 0.95
+            ) {
+                doc.text(textoLinea, x, y);
+            } else {
+                const espacio = (maxWidth - anchoTexto) / (lp.length - 1);
+                let offset = x;
+                lp.forEach((p, idx) => {
+                    doc.text(p, offset, y);
+                    if (idx < lp.length - 1) {
+                        offset += doc.getTextWidth(p + ' ') + espacio;
+                    }
+                });
+            }
 
                 y += lineHeight;
             });
