@@ -166,8 +166,10 @@ function limpiarFormulario() {
     document.getElementById("documento").focus();
 }
 
-// Generar PDF =========================
-// Generar PDF =========================
+// =========================
+// Generar PDF
+// =========================
+
 function generarPDF() {
 
     if (!seleccionado) {
@@ -254,7 +256,7 @@ function generarPDF() {
         // Encabezado
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
-        const encabezado = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
+        const encabezado = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DISTRITAL DE CULTURA, RECREACIÓN Y DEPORTE";
         const encLines = doc.splitTextToSize(encabezado, maxWidth);
         doc.text(encLines, width / 2, y, { align: "center" });
         y += encLines.length * 5 + 10;
@@ -289,7 +291,7 @@ function generarPDF() {
         doc.setFontSize(9.5);
         doc.text("Director de Asuntos Locales y Participación", width / 2, y, { align: "center" });
         y += 5;
-        doc.text("Secretaría de Cultura, Recreación y Deporte", width / 2, y, { align: "center" });
+        doc.text("Secretaría Distrital de Cultura, Recreación y Deporte", width / 2, y, { align: "center" });
 
         // Nota
         doc.setFontSize(6);
