@@ -273,26 +273,30 @@ function generarPDF() {
         y += 15;
 
         // Cuerpo
-       doc.setFont("helvetica", "normal");
-
+        // Cuerpo - párrafo 1
+        doc.setFont("helvetica", "normal");
         doc.setFontSize(10.5);
 
+        const parrafo1 = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.`;
 
+        y = justificarTexto(parrafo1, margin, y, maxWidth, 6);
 
-        const textoCompleto = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.
+// Espacio entre párrafos
+        y += 6;
 
+// Cuerpo - párrafo 2
+        const parrafo2 = `A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.`;
+
+        y = justificarTexto(parrafo2, margin, y, maxWidth, 6);
+
+// Espacio entre párrafos
+        y += 6;
+
+// Cuerpo - párrafo 3
+        const parrafo3 = `La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
+
+        y = justificarTexto(parrafo3, margin, y, maxWidth, 6);
         
-
-A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.
-
-
-
-La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
-
-
-
-        y = justificarTexto(textoCompleto, margin, y, maxWidth, 6);
-
         // Firma
         y += 20;
 
