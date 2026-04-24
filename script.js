@@ -166,7 +166,7 @@ function limpiarFormulario() {
     document.getElementById("documento").focus();
 }
 
-// =========================
+// Generar PDF =========================
 function generarPDF() {
 
     if (!seleccionado) {
@@ -185,6 +185,16 @@ function generarPDF() {
 
         let y = 50;
 
+// Código único de expedición
+        const aleatorio = Math.random().toString(36).substring(2, 6).toUpperCase();
+        const codigoExp = `SCRD-${hoy.getFullYear()}-${String(cedula).slice(0, 5)}-${aleatorio}`;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(100);
+        doc.text(`Código: ${codigoExp}`, width - margin, 15, { align: "right" });
+        doc.setTextColor(0);
+        
         if (plantilla) {
             doc.addImage(plantilla, "PNG", 0, 0, width, 279);
         }
