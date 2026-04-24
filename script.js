@@ -187,14 +187,6 @@ function generarPDF() {
 
         let y = 50;
 
-        // Código de expedición
-        const codigoExp = `Exp. No. SCRD-${hoy.getFullYear()}-${String(cedula).slice(-5)}`;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(100);
-        doc.text(codigoExp, width - margin, 15, { align: "right" });
-        doc.setTextColor(0); // restaurar color negro
-
         if (plantilla) {
             doc.addImage(plantilla, "PNG", 0, 0, width, 279);
         }
