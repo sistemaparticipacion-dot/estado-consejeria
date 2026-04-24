@@ -167,8 +167,6 @@ function limpiarFormulario() {
 }
 
 // =========================
-// GENERAR PDF
-// =========================
 function generarPDF() {
 
     if (!seleccionado) {
@@ -195,18 +193,15 @@ function generarPDF() {
         const cedula = seleccionado["No. Documento"];
         const sector = seleccionado["Sector"];
         const consejo = seleccionado["Consejo"];
-        const resolucion = seleccionado["Acto de reconocimiento (numero Resolución)"] 
+        const resolucion = seleccionado["Acto de reconocimiento (numero Resolución)"]
             || "Resolución No. 551 del 28 de julio de 2023";
 
         const hoy = new Date();
         const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
-        // =========================
-        // JUSTIFICADO CORREGIDO
-        // =========================
         function justificarTexto(texto, x, y, maxWidth, lineHeight) {
 
-            const palabras = texto.split(' ');
+            const palabras = texto.split(' ').filter(p => p.length > 0);
             let linea = [];
             let lineas = [];
 
@@ -223,27 +218,22 @@ function generarPDF() {
             if (linea.length) lineas.push(linea);
 
             lineas.forEach((lp, i) => {
-
                 const last = i === lineas.length - 1;
                 const textoLinea = lp.join(' ');
                 const anchoTexto = doc.getTextWidth(textoLinea);
 
-                // 🔥 REGLAS INTELIGENTES
-              if (
-                    last ||
-                anchoTexto > maxWidth * 0.95
-            ) {
-                doc.text(textoLinea, x, y);
-            } else {
-                const espacio = (maxWidth - anchoTexto) / (lp.length - 1);
-                let offset = x;
-                lp.forEach((p, idx) => {
-                    doc.text(p, offset, y);
-                    if (idx < lp.length - 1) {
-                        offset += doc.getTextWidth(p + ' ') + espacio;
-                    }
-                });
-            }
+                if (last || anchoTexto > maxWidth * 0.95) {
+                    doc.text(textoLinea, x, y);
+                } else {
+                    const espacio = (maxWidth - anchoTexto) / (lp.length - 1);
+                    let offset = x;
+                    lp.forEach((p, idx) => {
+                        doc.text(p, offset, y);
+                        if (idx < lp.length - 1) {
+                            offset += doc.getTextWidth(p + ' ') + espacio;
+                        }
+                    });
+                }
 
                 y += lineHeight;
             });
@@ -254,56 +244,39 @@ function generarPDF() {
         // Encabezado
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
-
         const encabezado = "EL SUSCRITO DIRECTOR DE ASUNTOS LOCALES Y PARTICIPACIÓN DE LA SECRETARÍA DE CULTURA, RECREACIÓN Y DEPORTE";
-
         const encLines = doc.splitTextToSize(encabezado, maxWidth);
         doc.text(encLines, width / 2, y, { align: "center" });
-
         y += encLines.length * 5 + 10;
 
         // Título
         doc.setFontSize(11);
         doc.text("HACE CONSTAR QUE:", width / 2, y, { align: "center" });
-
         y += 10;
 
         // Cuerpo
-        // Cuerpo - párrafo 1
         doc.setFont("helvetica", "normal");
         doc.setFontSize(10.5);
 
         const parrafo1 = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.`;
-
-        y = justificarTexto(parrafo1, margin, y, maxWidth, - 2, 6);
-
-// Espacio entre párrafos
+        y = justificarTexto(parrafo1, margin, y, maxWidth - 2, 6);
         y += 6;
 
-// Cuerpo - párrafo 2
         const parrafo2 = `A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.`;
-
-        y = justificarTexto(parrafo2, margin, y, maxWidth, - 2, 6);
-
-// Espacio entre párrafos
+        y = justificarTexto(parrafo2, margin, y, maxWidth - 2, 6);
         y += 6;
 
-// Cuerpo - párrafo 3
         const parrafo3 = `La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
+        y = justificarTexto(parrafo3, margin, y, maxWidth - 2, 6);
 
-        y = justificarTexto(parrafo3, margin, y, maxWidth, - 2, 6);
-        
         // Firma
         y += 20;
-
         doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
         doc.text("JULIÁN FELIPE DUARTE ÁLVAREZ", width / 2, y, { align: "center" });
-
         y += 6;
-
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9.5);
-
         doc.text("Director de Asuntos Locales y Participación", width / 2, y, { align: "center" });
         y += 5;
         doc.text("Secretaría de Cultura, Recreación y Deporte", width / 2, y, { align: "center" });
@@ -311,12 +284,12 @@ function generarPDF() {
         // Nota
         doc.setFontSize(6);
         doc.setTextColor(100);
-
         const nota = "Nota: Este certificado ha sido generado automáticamente desde el portal web Radar Cultural. Puede verificar la autenticidad del mismo a través del correo sistemaparticipacion@scrd.gov.co";
-
         doc.text(doc.splitTextToSize(nota, maxWidth), margin, 230);
 
         doc.save(`Certificado_${cedula}.pdf`);
+
+        limpiarFormulario();
 
         // LIMPIAR DESPUÉS
         limpiarFormulario();
