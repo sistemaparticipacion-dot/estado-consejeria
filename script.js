@@ -273,44 +273,25 @@ function generarPDF() {
         y += 15;
 
         // Cuerpo
-       // Configuración inicial
-doc.setFont("helvetica", "normal");
-doc.setFontSize(10.5);
+       doc.setFont("helvetica", "normal");
 
-const margin = 25; // Margen estándar para documentos oficiales
-const maxWidth = 165; // Ancho disponible en una hoja carta (215mm - márgenes)
-let y = 50; // Posición inicial en el eje Y
-const interlineado = 6; 
+        doc.setFontSize(10.5);
 
-// Dividimos el texto en párrafos para procesarlos uno por uno
-const parrafos = [
-    `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.`,
-    
-    `A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.`,
-    
-    `La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`
-];
 
-// Función para renderizar con justificado real
-parrafos.forEach((texto) => {
-    // splitTextToSize divide el texto en líneas según el ancho máximo
-    const lineas = doc.splitTextToSize(texto, maxWidth);
-    
-    lineas.forEach((linea, index) => {
-        // Si es la última línea del párrafo, no se justifica (alineada a la izquierda)
-        // Si no es la última, se usa el modo 'justify'
-        const esUltimaLinea = index === lineas.length - 1;
+
+        const textoCompleto = `${nombre}, identificado(a) con cédula de ciudadanía número ${cedula}, surtió el proceso de elección popular establecido por el Sistema Distrital de Arte, Cultura y Patrimonio y fue elegido(a) como consejero(a) representante por el sector de ${sector} ante el ${consejo} por el periodo 2023-2027, según ${resolucion}.
+
         
-        doc.text(linea, margin, y, {
-            align: esUltimaLinea ? 'left' : 'justify',
-            maxWidth: maxWidth
-        });
-        
-        y += interlineado; // Bajamos a la siguiente línea
-    });
 
-    y += 4; // Espacio adicional entre párrafos
-});
+A la fecha de expedición de la presente certificación, cuenta con Consejería ACTIVA, en los términos de lo señalado en el artículo 155 del Decreto Distrital 649 de 2025.
+
+
+
+La anterior certificación se expide a los ${hoy.getDate()} días del mes de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()} por solicitud del interesado(a).`;
+
+
+
+        y = justificarTexto(textoCompleto, margin, y, maxWidth, 6);
 
         // Firma
         y += 20;
